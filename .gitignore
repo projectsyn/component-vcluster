@@ -1,0 +1,14 @@
+# Commodore
+.cache/
+helmcharts/
+manifests/
+vendor/
+jsonnetfile.lock.json
+crds/
+compiled/
+
+# Antora
+_archive/
+_public/
+
+# Additional entries

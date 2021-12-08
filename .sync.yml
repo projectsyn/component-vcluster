@@ -1,0 +1,15 @@
+:global:
+  componentName: vcluster
+  githubUrl: https://github.com/projectsyn/component-vcluster
+  feature_goldenTests: true
+
+docs/antora.yml:
+  name: vcluster
+  title: vcluster
+.github/workflows/test.yaml:
+  test_makeTarget: test -e instance=${{ matrix.instance }}
+  goldenTest_makeTarget: golden-diff -e instance=${{ matrix.instance }}
+  matrix:
+    key: instance
+    entries:
+      - defaults

@@ -1,0 +1,4 @@
+parameters:
+  vcluster:
+    =_metadata: {}
+    namespace: syn-vcluster

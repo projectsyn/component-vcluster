@@ -1,0 +1,19 @@
+= Parameters
+
+The parent key for all of the following parameters is `vcluster`.
+
+== `namespace`
+
+[horizontal]
+type:: string
+default:: `syn-vcluster`
+
+The namespace in which to deploy this component.
+
+
+== Example
+
+[source,yaml]
+----
+namespace: example-namespace
+----
