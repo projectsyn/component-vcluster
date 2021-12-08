@@ -41,7 +41,7 @@ jobs:
         with:
           path: ${{ env.COMPONENT_NAME }}
       - name: Compile component
-        run: make test -e instance=${{ matrix.instance }}
+        run: make test
   golden:
     runs-on: ubuntu-latest
     strategy:
