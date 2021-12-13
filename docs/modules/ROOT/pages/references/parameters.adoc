@@ -6,14 +6,165 @@ The parent key for all of the following parameters is `vcluster`.
 
 [horizontal]
 type:: string
-default:: `syn-vcluster`
+default:: `syn-${_instance}`
 
 The namespace in which to deploy this component.
+
+
+== `host_service_cidr`
+
+[horizontal]
+type:: string
+default:: `null`
+
+The host cluster's service CIDR. Must be set.
+
+You can find out a host cluster's service CIDR by deploying a service with an invalid ClusterIP (such as 1.1.1.1).
+
+[source,shell]
+----
+create svc clusterip check-service-cidr --clusterip=1.1.1.1 --tcp=5678:5678
+----
+
+The error message shows the host cluster's service CIDR:
+
+[source]
+----
+The Service "check-service-cidr" is invalid: spec.clusterIPs: Invalid value: []string{"1.1.1.1"}.... The range of valid IPs is 10.96.0.0/12.
+----
+
+
+== `images`
+
+[horizontal]
+type:: dictionary
+
+Dictionary containing the container images used by this component.
+
+The `kubectl` image is used to create OCP routes. The `kubectl` and `jq` binaries are required in this image.
+
+
+== `k3s.additional_args`
+
+[horizontal]
+type:: list
+default:: `[]`
+example::
++
+[source,yaml]
+----
+k3s:
+  additional_args:
+    - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
+    - --kube-apiserver-arg=oidc-client-id=local
+    - --kube-apiserver-arg=oidc-username-claim=email
+    - --kube-apiserver-arg=oidc-groups-claim=groups
+----
+
+Additional arguments for the k3s cluster.
+
+
+== `syncer.additional_args`
+
+[horizontal]
+type:: list
+default:: `[]`
+
+Additional arguments for vcluster syncer.
+
+
+== `storage.persistence`
+
+[horizontal]
+type:: boolean
+default:: `true`
+
+Persistence controls whether vcluster resources are persisted between deployments.
+
+
+== `storage.size`
+
+[horizontal]
+type:: string
+default:: `5Gi`
+
+The size of the persistent volume claim.
+
+
+== `storage.class_name`
+
+[horizontal]
+type:: string
+default:: `null`
+
+The `StorageClass` used for the persistent volume claim.
+
+
+== `ingress.host`
+
+[horizontal]
+type:: string
+default:: `null`
+
+If set, an ingress with the defined host is created.
+
+
+== `ingress.annotations`
+
+[horizontal]
+type:: dict
+default:: `{}`
+example::
++
+[source,yaml]
+----
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+----
+
+Additional annotations for the ingress object.
+
+
+== `ingress.labels`
+
+[horizontal]
+type:: dict
+default:: `{}`
+
+Additional labels for the ingress object.
+
+
+== `ocp_route.host`
+
+[horizontal]
+type:: string
+default:: `null`
+
+If set, a `route.openshift.io/v1.Route` with the defined host is created.
+
+The route is set with TLS termination set to re-encrypt.
+
+The re-encyption breaks the mTLS user authentication.
+A secondary authentication method, like OIDC, should be configured.
 
 
 == Example
 
 [source,yaml]
 ----
-namespace: example-namespace
+host_service_cidr: 172.30.0.0/16
+storage:
+  persistence: false
+ingress:
+  host: testcluster.local
+k3s:
+  additional_args:
+    - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
+    - --kube-apiserver-arg=oidc-client-id=local
+    - --kube-apiserver-arg=oidc-username-claim=email
+    - --kube-apiserver-arg=oidc-groups-claim=groups
 ----

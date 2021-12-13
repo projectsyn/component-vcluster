@@ -1,0 +1,410 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    name: vc-vcluster
+  name: vc-vcluster
+  namespace: syn-vcluster
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: syn-vcluster
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+      - secrets
+      - services
+      - pods
+      - pods/attach
+      - pods/portforward
+      - pods/exec
+      - endpoints
+      - persistentvolumeclaims
+    verbs:
+      - create
+      - delete
+      - patch
+      - update
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ''
+    resources:
+      - events
+      - pods/log
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - create
+      - delete
+      - patch
+      - update
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - replicasets
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ''
+    resources:
+      - endpoints/restricted
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: syn-vcluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vcluster
+subjects:
+  - kind: ServiceAccount
+    name: vc-vcluster
+    namespace: syn-vcluster
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: syn-vcluster
+spec:
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app: vcluster
+    release: vcluster
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster-headless
+  name: vcluster-headless
+  namespace: syn-vcluster
+spec:
+  clusterIP: None
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app: vcluster
+    release: vcluster
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: syn-vcluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vcluster
+      release: vcluster
+  serviceName: vcluster-headless
+  template:
+    metadata:
+      labels:
+        app: vcluster
+        release: vcluster
+    spec:
+      affinity: {}
+      containers:
+        - args:
+            - server
+            - --write-kubeconfig=/data/k3s-config/kube-config.yaml
+            - --data-dir=/data
+            - --disable=traefik,servicelb,metrics-server,local-storage,coredns
+            - --disable-network-policy
+            - --disable-agent
+            - --disable-scheduler
+            - --disable-cloud-controller
+            - --flannel-backend=none
+            - --service-cidr=172.30.0.0/16
+            - --kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle
+          command:
+            - /bin/k3s
+          env: []
+          image: docker.io/rancher/k3s:v1.22.2-k3s1
+          name: vcluster
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /data
+              name: data
+        - args:
+            - --name=vcluster
+            - --out-kube-config-secret=vc-vcluster-kubeconfig
+          env: []
+          image: docker.io/loftsh/vcluster:0.5.0-alpha.6
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 60
+            periodSeconds: 2
+          name: syncer
+          readinessProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /readyz
+              port: 8443
+              scheme: HTTPS
+            periodSeconds: 2
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /data
+              name: data
+              readOnly: true
+      nodeSelector: {}
+      serviceAccountName: vc-vcluster
+      terminationGracePeriodSeconds: 10
+      tolerations: []
+      volumes: null
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
+        storageClassName: null
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster-create-route
+  name: vcluster-create-route
+  namespace: syn-vcluster
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster-create-route
+  name: vcluster-create-route
+  namespace: syn-vcluster
+rules:
+  - apiGroups:
+      - route.openshift.io
+    resources:
+      - routes
+      - routes/custom-host
+    verbs:
+      - '*'
+  - apiGroups:
+      - apps
+    resourceNames:
+      - vcluster
+    resources:
+      - statefulsets
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster-create-route
+  name: vcluster-create-route
+  namespace: syn-vcluster
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vcluster-create-route
+subjects:
+  - kind: ServiceAccount
+    name: vcluster-create-route
+    namespace: syn-vcluster
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+  labels:
+    name: vcluster-create-route
+  name: vcluster-create-route
+  namespace: syn-vcluster
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        name: vcluster-create-route
+    spec:
+      containers:
+        - args:
+            - -eu
+            - -c
+            - "#!/bin/sh\nset -eu\n\nvcluster_kubeconfig=/etc/vcluster-kubeconfig/config\n\
+              \necho \"Using kubeconfig: $vcluster_kubeconfig\"\n\ncert=$(kubectl\
+              \ --kubeconfig $vcluster_kubeconfig config view '-o=template={{(index\
+              \ (index .clusters 0).cluster \"certificate-authority-data\") | base64decode}}'\
+              \ --raw)\n\necho \"Found certificate:\\n$cert\"\n\necho \"Looking for\
+              \ StatefulSet.apps/${VCLUSTER_STS_NAME}...\"\n\nowner=$(kubectl get\
+              \ StatefulSet.apps \"$VCLUSTER_STS_NAME\" -ojson | jq '{kind: .kind,\
+              \ apiVersion: .apiVersion, name: .metadata.name, uid: .metadata.uid}')\n\
+              \necho \"Found StatefulSet as owner: $owner\"\n\necho \"Applying route...\"\
+              \n\nprintf \"$1\" \\\n    | jq \\\n        --arg     cert  \"$cert\"\
+              \ \\\n        --argjson owner \"$owner\" \\\n        '.metadata.ownerReferences\
+              \ = [$owner] | .spec.tls.destinationCACertificate = $cert' \\\n    |\
+              \ kubectl apply -f - -oyaml\n\necho \"Done!\"\n"
+            - --
+            - '{
+
+              "apiVersion": "route.openshift.io/v1",
+
+              "kind": "Route",
+
+              "metadata": {
+
+              "annotations": {
+
+
+              },
+
+              "labels": {
+
+              "name": "vcluster"
+
+              },
+
+              "name": "vcluster",
+
+              "namespace": "syn-vcluster"
+
+              },
+
+              "spec": {
+
+              "host": "test.apps.local",
+
+              "path": "/",
+
+              "port": {
+
+              "targetPort": "https"
+
+              },
+
+              "tls": {
+
+              "insecureEdgeTerminationPolicy": "None",
+
+              "termination": "reencrypt"
+
+              },
+
+              "to": {
+
+              "kind": "Service",
+
+              "name": "vcluster",
+
+              "weight": 100
+
+              },
+
+              "wildcardPolicy": "None"
+
+              }
+
+              }'
+          command:
+            - sh
+          env:
+            - name: HOME
+              value: /export
+            - name: NAMESPACE
+              value: syn-vcluster
+            - name: VCLUSTER_STS_NAME
+              value: vcluster
+          image: quay.io/bitnami/kubectl:1.22.4
+          imagePullPolicy: IfNotPresent
+          name: vcluster
+          ports: []
+          stdin: false
+          tty: false
+          volumeMounts:
+            - mountPath: /export
+              name: export
+            - mountPath: /etc/vcluster-kubeconfig
+              name: kubeconfig
+              readOnly: true
+          workingDir: /export
+      imagePullSecrets: []
+      initContainers: []
+      restartPolicy: OnFailure
+      serviceAccountName: vcluster-create-route
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: export
+        - name: kubeconfig
+          secret:
+            secretName: vc-vcluster-kubeconfig

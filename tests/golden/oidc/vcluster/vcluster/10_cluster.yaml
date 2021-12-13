@@ -1,0 +1,242 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    name: vc-vcluster
+  name: vc-vcluster
+  namespace: testns
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: testns
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+      - secrets
+      - services
+      - pods
+      - pods/attach
+      - pods/portforward
+      - pods/exec
+      - endpoints
+      - persistentvolumeclaims
+    verbs:
+      - create
+      - delete
+      - patch
+      - update
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ''
+    resources:
+      - events
+      - pods/log
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - create
+      - delete
+      - patch
+      - update
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - replicasets
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: testns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vcluster
+subjects:
+  - kind: ServiceAccount
+    name: vc-vcluster
+    namespace: testns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: testns
+spec:
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app: vcluster
+    release: vcluster
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster-headless
+  name: vcluster-headless
+  namespace: testns
+spec:
+  clusterIP: None
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app: vcluster
+    release: vcluster
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: testns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vcluster
+      release: vcluster
+  serviceName: vcluster-headless
+  template:
+    metadata:
+      labels:
+        app: vcluster
+        release: vcluster
+    spec:
+      affinity: {}
+      containers:
+        - args:
+            - server
+            - --write-kubeconfig=/data/k3s-config/kube-config.yaml
+            - --data-dir=/data
+            - --disable=traefik,servicelb,metrics-server,local-storage,coredns
+            - --disable-network-policy
+            - --disable-agent
+            - --disable-scheduler
+            - --disable-cloud-controller
+            - --flannel-backend=none
+            - --service-cidr=172.30.0.0/16
+            - --kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle
+            - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
+            - --kube-apiserver-arg=oidc-client-id=local
+            - --kube-apiserver-arg=oidc-username-claim=email
+            - --kube-apiserver-arg=oidc-groups-claim=groups
+          command:
+            - /bin/k3s
+          env: []
+          image: docker.io/rancher/k3s:v1.22.2-k3s1
+          name: vcluster
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /data
+              name: data
+        - args:
+            - --name=vcluster
+            - --out-kube-config-secret=vc-vcluster-kubeconfig
+          env: []
+          image: docker.io/loftsh/vcluster:0.5.0-alpha.6
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 60
+            periodSeconds: 2
+          name: syncer
+          readinessProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /readyz
+              port: 8443
+              scheme: HTTPS
+            periodSeconds: 2
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /data
+              name: data
+              readOnly: true
+      nodeSelector: {}
+      serviceAccountName: vc-vcluster
+      terminationGracePeriodSeconds: 10
+      tolerations: []
+      volumes:
+        - emptyDir: {}
+          name: data
+  volumeClaimTemplates: []
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations: {}
+  labels:
+    name: vcluster
+  name: vcluster
+  namespace: testns
+spec:
+  rules:
+    - host: testcluster.local
+      http:
+        paths:
+          - backend:
+              service:
+                name: vcluster
+                port:
+                  name: https
+            path: /
+            pathType: Prefix

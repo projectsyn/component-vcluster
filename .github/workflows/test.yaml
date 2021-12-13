@@ -33,6 +33,8 @@ jobs:
       matrix:
         instance:
           - defaults
+          - oidc
+          - openshift
     defaults:
       run:
         working-directory: ${{ env.COMPONENT_NAME }}

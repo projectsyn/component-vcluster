@@ -1,3 +1,3 @@
-# Overwrite parameters here
-
-# parameters: {...}
+parameters:
+  vcluster:
+    host_service_cidr: 172.30.0.0/16
