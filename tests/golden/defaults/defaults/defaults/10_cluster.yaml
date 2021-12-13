@@ -3,18 +3,18 @@ kind: ServiceAccount
 metadata:
   annotations: {}
   labels:
-    name: vc-vcluster
-  name: vc-vcluster
-  namespace: syn-vcluster
+    name: vc-defaults
+  name: vc-defaults
+  namespace: syn-defaults
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: defaults
+  name: defaults
+  namespace: syn-defaults
 rules:
   - apiGroups:
       - ''
@@ -73,26 +73,26 @@ kind: RoleBinding
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: defaults
+  name: defaults
+  namespace: syn-defaults
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: vcluster
+  name: defaults
 subjects:
   - kind: ServiceAccount
-    name: vc-vcluster
-    namespace: syn-vcluster
+    name: vc-defaults
+    namespace: syn-defaults
 ---
 apiVersion: v1
 kind: Service
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: defaults
+  name: defaults
+  namespace: syn-defaults
 spec:
   ports:
     - name: https
@@ -101,7 +101,7 @@ spec:
       targetPort: 8443
   selector:
     app: vcluster
-    release: vcluster
+    release: defaults
   type: ClusterIP
 ---
 apiVersion: v1
@@ -109,9 +109,9 @@ kind: Service
 metadata:
   annotations: {}
   labels:
-    name: vcluster-headless
-  name: vcluster-headless
-  namespace: syn-vcluster
+    name: defaults-headless
+  name: defaults-headless
+  namespace: syn-defaults
 spec:
   clusterIP: None
   ports:
@@ -121,28 +121,28 @@ spec:
       targetPort: 8443
   selector:
     app: vcluster
-    release: vcluster
+    release: defaults
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: defaults
+  name: defaults
+  namespace: syn-defaults
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: vcluster
-      release: vcluster
-  serviceName: vcluster-headless
+      release: defaults
+  serviceName: defaults-headless
   template:
     metadata:
       labels:
         app: vcluster
-        release: vcluster
+        release: defaults
     spec:
       affinity: {}
       containers:
@@ -175,8 +175,8 @@ spec:
             - mountPath: /data
               name: data
         - args:
-            - --name=vcluster
-            - --out-kube-config-secret=vc-vcluster-kubeconfig
+            - --name=defaults
+            - --out-kube-config-secret=vc-defaults-kubeconfig
           env: []
           image: docker.io/loftsh/vcluster:0.5.0-alpha.6
           livenessProbe:
@@ -208,7 +208,7 @@ spec:
               name: data
               readOnly: true
       nodeSelector: {}
-      serviceAccountName: vc-vcluster
+      serviceAccountName: vc-defaults
       terminationGracePeriodSeconds: 10
       tolerations: []
       volumes: null

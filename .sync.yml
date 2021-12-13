@@ -15,3 +15,7 @@ docs/antora.yml:
       - defaults
       - oidc
       - openshift
+
+Makefile:
+  includes:
+    - Makefile.custom.mk

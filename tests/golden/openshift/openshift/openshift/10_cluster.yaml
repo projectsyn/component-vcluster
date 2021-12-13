@@ -3,18 +3,18 @@ kind: ServiceAccount
 metadata:
   annotations: {}
   labels:
-    name: vc-vcluster
-  name: vc-vcluster
-  namespace: syn-vcluster
+    name: vc-openshift
+  name: vc-openshift
+  namespace: syn-openshift
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: openshift
+  name: openshift
+  namespace: syn-openshift
 rules:
   - apiGroups:
       - ''
@@ -79,26 +79,26 @@ kind: RoleBinding
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: openshift
+  name: openshift
+  namespace: syn-openshift
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: vcluster
+  name: openshift
 subjects:
   - kind: ServiceAccount
-    name: vc-vcluster
-    namespace: syn-vcluster
+    name: vc-openshift
+    namespace: syn-openshift
 ---
 apiVersion: v1
 kind: Service
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: openshift
+  name: openshift
+  namespace: syn-openshift
 spec:
   ports:
     - name: https
@@ -107,7 +107,7 @@ spec:
       targetPort: 8443
   selector:
     app: vcluster
-    release: vcluster
+    release: openshift
   type: ClusterIP
 ---
 apiVersion: v1
@@ -115,9 +115,9 @@ kind: Service
 metadata:
   annotations: {}
   labels:
-    name: vcluster-headless
-  name: vcluster-headless
-  namespace: syn-vcluster
+    name: openshift-headless
+  name: openshift-headless
+  namespace: syn-openshift
 spec:
   clusterIP: None
   ports:
@@ -127,28 +127,28 @@ spec:
       targetPort: 8443
   selector:
     app: vcluster
-    release: vcluster
+    release: openshift
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
-  namespace: syn-vcluster
+    name: openshift
+  name: openshift
+  namespace: syn-openshift
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: vcluster
-      release: vcluster
-  serviceName: vcluster-headless
+      release: openshift
+  serviceName: openshift-headless
   template:
     metadata:
       labels:
         app: vcluster
-        release: vcluster
+        release: openshift
     spec:
       affinity: {}
       containers:
@@ -181,8 +181,8 @@ spec:
             - mountPath: /data
               name: data
         - args:
-            - --name=vcluster
-            - --out-kube-config-secret=vc-vcluster-kubeconfig
+            - --name=openshift
+            - --out-kube-config-secret=vc-openshift-kubeconfig
           env: []
           image: docker.io/loftsh/vcluster:0.5.0-alpha.6
           livenessProbe:
@@ -214,7 +214,7 @@ spec:
               name: data
               readOnly: true
       nodeSelector: {}
-      serviceAccountName: vc-vcluster
+      serviceAccountName: vc-openshift
       terminationGracePeriodSeconds: 10
       tolerations: []
       volumes: null
@@ -234,18 +234,18 @@ kind: ServiceAccount
 metadata:
   annotations: {}
   labels:
-    name: vcluster-create-route
-  name: vcluster-create-route
-  namespace: syn-vcluster
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations: {}
   labels:
-    name: vcluster-create-route
-  name: vcluster-create-route
-  namespace: syn-vcluster
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
 rules:
   - apiGroups:
       - route.openshift.io
@@ -257,7 +257,7 @@ rules:
   - apiGroups:
       - apps
     resourceNames:
-      - vcluster
+      - openshift
     resources:
       - statefulsets
     verbs:
@@ -268,17 +268,17 @@ kind: RoleBinding
 metadata:
   annotations: {}
   labels:
-    name: vcluster-create-route
-  name: vcluster-create-route
-  namespace: syn-vcluster
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: vcluster-create-route
+  name: openshift-create-route
 subjects:
   - kind: ServiceAccount
-    name: vcluster-create-route
-    namespace: syn-vcluster
+    name: openshift-create-route
+    namespace: syn-openshift
 ---
 apiVersion: batch/v1
 kind: Job
@@ -286,16 +286,16 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: PostSync
   labels:
-    name: vcluster-create-route
-  name: vcluster-create-route
-  namespace: syn-vcluster
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
 spec:
   completions: 1
   parallelism: 1
   template:
     metadata:
       labels:
-        name: vcluster-create-route
+        name: openshift-create-route
     spec:
       containers:
         - args:
@@ -330,13 +330,13 @@ spec:
 
               "labels": {
 
-              "name": "vcluster"
+              "name": "openshift"
 
               },
 
-              "name": "vcluster",
+              "name": "openshift",
 
-              "namespace": "syn-vcluster"
+              "namespace": "syn-openshift"
 
               },
 
@@ -364,7 +364,7 @@ spec:
 
               "kind": "Service",
 
-              "name": "vcluster",
+              "name": "openshift",
 
               "weight": 100
 
@@ -381,12 +381,12 @@ spec:
             - name: HOME
               value: /export
             - name: NAMESPACE
-              value: syn-vcluster
+              value: syn-openshift
             - name: VCLUSTER_STS_NAME
-              value: vcluster
+              value: openshift
           image: quay.io/bitnami/kubectl:1.22.4
           imagePullPolicy: IfNotPresent
-          name: vcluster
+          name: openshift
           ports: []
           stdin: false
           tty: false
@@ -400,11 +400,11 @@ spec:
       imagePullSecrets: []
       initContainers: []
       restartPolicy: OnFailure
-      serviceAccountName: vcluster-create-route
+      serviceAccountName: openshift-create-route
       terminationGracePeriodSeconds: 30
       volumes:
         - emptyDir: {}
           name: export
         - name: kubeconfig
           secret:
-            secretName: vc-vcluster-kubeconfig
+            secretName: vc-openshift-kubeconfig

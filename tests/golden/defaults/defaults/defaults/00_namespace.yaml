@@ -3,5 +3,5 @@ kind: Namespace
 metadata:
   annotations: {}
   labels:
-    name: syn-vcluster
-  name: syn-vcluster
+    name: syn-defaults
+  name: syn-defaults

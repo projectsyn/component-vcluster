@@ -3,8 +3,8 @@ kind: ServiceAccount
 metadata:
   annotations: {}
   labels:
-    name: vc-vcluster
-  name: vc-vcluster
+    name: vc-oidc
+  name: vc-oidc
   namespace: testns
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -12,8 +12,8 @@ kind: Role
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
+    name: oidc
+  name: oidc
   namespace: testns
 rules:
   - apiGroups:
@@ -73,16 +73,16 @@ kind: RoleBinding
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
+    name: oidc
+  name: oidc
   namespace: testns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: vcluster
+  name: oidc
 subjects:
   - kind: ServiceAccount
-    name: vc-vcluster
+    name: vc-oidc
     namespace: testns
 ---
 apiVersion: v1
@@ -90,8 +90,8 @@ kind: Service
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
+    name: oidc
+  name: oidc
   namespace: testns
 spec:
   ports:
@@ -101,7 +101,7 @@ spec:
       targetPort: 8443
   selector:
     app: vcluster
-    release: vcluster
+    release: oidc
   type: ClusterIP
 ---
 apiVersion: v1
@@ -109,8 +109,8 @@ kind: Service
 metadata:
   annotations: {}
   labels:
-    name: vcluster-headless
-  name: vcluster-headless
+    name: oidc-headless
+  name: oidc-headless
   namespace: testns
 spec:
   clusterIP: None
@@ -121,28 +121,28 @@ spec:
       targetPort: 8443
   selector:
     app: vcluster
-    release: vcluster
+    release: oidc
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
+    name: oidc
+  name: oidc
   namespace: testns
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: vcluster
-      release: vcluster
-  serviceName: vcluster-headless
+      release: oidc
+  serviceName: oidc-headless
   template:
     metadata:
       labels:
         app: vcluster
-        release: vcluster
+        release: oidc
     spec:
       affinity: {}
       containers:
@@ -179,8 +179,8 @@ spec:
             - mountPath: /data
               name: data
         - args:
-            - --name=vcluster
-            - --out-kube-config-secret=vc-vcluster-kubeconfig
+            - --name=oidc
+            - --out-kube-config-secret=vc-oidc-kubeconfig
           env: []
           image: docker.io/loftsh/vcluster:0.5.0-alpha.6
           livenessProbe:
@@ -212,7 +212,7 @@ spec:
               name: data
               readOnly: true
       nodeSelector: {}
-      serviceAccountName: vc-vcluster
+      serviceAccountName: vc-oidc
       terminationGracePeriodSeconds: 10
       tolerations: []
       volumes:
@@ -225,8 +225,8 @@ kind: Ingress
 metadata:
   annotations: {}
   labels:
-    name: vcluster
-  name: vcluster
+    name: oidc
+  name: oidc
   namespace: testns
 spec:
   rules:
@@ -235,7 +235,7 @@ spec:
         paths:
           - backend:
               service:
-                name: vcluster
+                name: oidc
                 port:
                   name: https
             path: /
