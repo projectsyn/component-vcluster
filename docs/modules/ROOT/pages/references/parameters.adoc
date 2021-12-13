@@ -2,6 +2,8 @@
 
 The parent key for all of the following parameters is `vcluster`.
 
+This component supports multi-instantiation.
+
 == `namespace`
 
 [horizontal]
@@ -10,6 +12,7 @@ default:: `syn-${_instance}`
 
 The namespace in which to deploy this component.
 
+Deploying multiple vclusters in the same namespace isn't supported.
 
 == `host_service_cidr`
 
