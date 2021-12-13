@@ -216,7 +216,7 @@ local cluster = function(name, options)
                 `host_service_cidr` must be set.
 
                 You can find out a host cluster's service CIDR by deploying a service with an invalid ClusterIP (such as 1.1.1.1).
-                $ create svc clusterip check-service-cidr --clusterip=1.1.1.1 --tcp=5678:5678
+                $ kubectl create svc clusterip check-service-cidr --clusterip=1.1.1.1 --tcp=5678:5678
                 The error message shows the host cluster's service CIDR:
                 > The Service "check-service-cidr" is invalid: spec.clusterIPs: Invalid value: []string{"1.1.1.1"}.... The range of valid IPs is 10.96.0.0/12.
               |||,

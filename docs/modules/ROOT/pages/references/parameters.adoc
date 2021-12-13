@@ -23,7 +23,7 @@ You can find out a host cluster's service CIDR by deploying a service with an in
 
 [source,shell]
 ----
-create svc clusterip check-service-cidr --clusterip=1.1.1.1 --tcp=5678:5678
+kubectl create svc clusterip check-service-cidr --clusterip=1.1.1.1 --tcp=5678:5678
 ----
 
 The error message shows the host cluster's service CIDR:
