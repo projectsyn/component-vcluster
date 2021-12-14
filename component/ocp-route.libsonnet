@@ -1,3 +1,16 @@
+/*
+* Creates a re-encrypting OCP route.
+*
+* Routes do not support reading certificates from secrets. Thus
+* certificates have to be known before creating a route.
+* The clusters serving certificate is only known after startup.
+* So we create a job that:
+* - Mounts the vclusters kubeconfig
+* - Reads the clusters self signed serving certificate from it
+* - Inserts the certificate into the route template
+* - Creates the route and sets ownership to the vcluster StatefulSet
+*/
+
 local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
