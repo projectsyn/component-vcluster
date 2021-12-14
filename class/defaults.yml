@@ -1,4 +1,39 @@
 parameters:
   vcluster:
     =_metadata: {}
-    namespace: syn-vcluster
+    multi_instance: true
+    namespace: syn-${_instance}
+
+    host_service_cidr: null
+
+    images:
+      k3s:
+        repository: docker.io
+        image: rancher/k3s
+        tag: v1.22.2-k3s1
+      syncer:
+        repository: docker.io
+        image: loftsh/vcluster
+        tag: 0.5.0-alpha.6
+      kubectl:
+        repository: quay.io
+        image: bitnami/kubectl
+        tag: "1.22.4"
+
+    storage:
+      persistence: true
+      size: 5Gi
+      class_name: null
+
+    ingress:
+      host: null
+      labels: {}
+      annotations: {}
+
+    ocp_route:
+      host: null
+
+    k3s:
+      additional_args: []
+    syncer:
+      additional_args: []

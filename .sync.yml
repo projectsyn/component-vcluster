@@ -13,3 +13,9 @@ docs/antora.yml:
     key: instance
     entries:
       - defaults
+      - oidc
+      - openshift
+
+Makefile:
+  includes:
+    - Makefile.custom.mk

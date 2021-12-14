@@ -1,0 +1,8 @@
+parameters:
+  vcluster:
+    host_service_cidr: 172.30.0.0/16
+    ocp_route:
+      host: test.apps.local
+
+  facts:
+    distribution: openshift4

@@ -8,4 +8,4 @@ parameters:
       - input_paths:
           - vcluster/component/main.jsonnet
         input_type: jsonnet
-        output_path: vcluster/
+        output_path: ${_instance}/
