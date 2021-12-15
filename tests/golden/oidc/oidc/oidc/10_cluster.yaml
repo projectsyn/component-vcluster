@@ -165,7 +165,7 @@ spec:
           command:
             - /bin/k3s
           env: []
-          image: docker.io/rancher/k3s:v1.22.2-k3s1
+          image: docker.io/rancher/k3s:v1.22.4-k3s1
           name: vcluster
           resources:
             limits:
@@ -182,7 +182,7 @@ spec:
             - --name=oidc
             - --out-kube-config-secret=vc-oidc-kubeconfig
           env: []
-          image: docker.io/loftsh/vcluster:0.5.0-alpha.6
+          image: docker.io/loftsh/vcluster:0.5.0-beta.0
           livenessProbe:
             failureThreshold: 10
             httpGet:
