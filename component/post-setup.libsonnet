@@ -4,7 +4,8 @@ local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 local params = inv.parameters.vcluster;
 
-local synthesize = function(jobName, secretName, url)
+local synthesize = function(name, secretName, url)
+  local jobName = '%s-synthesize' % name;
   kube.Job(jobName) {
     metadata+: {
       namespace: params.namespace,
@@ -23,6 +24,7 @@ local synthesize = function(jobName, secretName, url)
               args: [ '-eu', '-c', importstr './scripts/synthesize.sh', '--', url ],
               env: [
                 { name: 'HOME', value: '/export' },
+                { name: 'VCLUSTER_SERVER_URL', value: 'https://%s:443' % name },
               ],
               volumeMounts: [
                 { name: 'export', mountPath: '/export' },
@@ -39,7 +41,8 @@ local synthesize = function(jobName, secretName, url)
     },
   };
 
-local applyManifests = function(jobName, secretName, manifests)
+local applyManifests = function(name, secretName, manifests)
+  local jobName = '%s-apply-manifests' % name;
   local manifestArray = if std.isArray(manifests) then
     manifests
   else if std.isObject(manifests) then
@@ -65,6 +68,7 @@ local applyManifests = function(jobName, secretName, manifests)
               args: [ '-eu', '-c', importstr './scripts/apply.sh', '--' ] + std.map(function(m) std.manifestJsonEx(m, ''), manifestArray),
               env: [
                 { name: 'HOME', value: '/export' },
+                { name: 'VCLUSTER_SERVER_URL', value: 'https://%s:443' % name },
               ],
               volumeMounts: [
                 { name: 'export', mountPath: '/export' },
