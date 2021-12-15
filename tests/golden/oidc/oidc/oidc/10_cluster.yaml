@@ -156,12 +156,12 @@ spec:
             - --disable-scheduler
             - --disable-cloud-controller
             - --flannel-backend=none
+            - --service-cidr=172.30.0.0/16
+            - --kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle
             - --tls-san=oidc.testns.svc.cluster.local
             - --tls-san=oidc.testns.svc
             - --tls-san=oidc.testns
             - --tls-san=oidc
-            - --service-cidr=172.30.0.0/16
-            - --kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle
             - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
             - --kube-apiserver-arg=oidc-client-id=local
             - --kube-apiserver-arg=oidc-username-claim=email
@@ -185,6 +185,10 @@ spec:
         - args:
             - --name=oidc
             - --out-kube-config-secret=vc-oidc-kubeconfig
+            - --tls-san=oidc.testns.svc.cluster.local
+            - --tls-san=oidc.testns.svc
+            - --tls-san=oidc.testns
+            - --tls-san=oidc
           env: []
           image: docker.io/loftsh/vcluster:0.5.0-beta.0
           livenessProbe:

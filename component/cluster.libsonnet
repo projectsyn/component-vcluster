@@ -206,6 +206,12 @@ local cluster = function(name, options)
               emptyDir: {},
             },
           ],
+          local tlsSANs = [
+            '--tls-san=%s.%s.svc.cluster.local' % [ name, options.namespace ],
+            '--tls-san=%s.%s.svc' % [ name, options.namespace ],
+            '--tls-san=%s.%s' % [ name, options.namespace ],
+            '--tls-san=%s' % [ name ],
+          ],
           containers: [
             {
               image: formatImage(options.images.k3s),
@@ -231,13 +237,9 @@ local cluster = function(name, options)
                 '--disable-scheduler',
                 '--disable-cloud-controller',
                 '--flannel-backend=none',
-                '--tls-san=%s.%s.svc.cluster.local' % [ name, options.namespace ],
-                '--tls-san=%s.%s.svc' % [ name, options.namespace ],
-                '--tls-san=%s.%s' % [ name, options.namespace ],
-                '--tls-san=%s' % [ name ],
                 '--service-cidr=%s' % options.host_service_cidr,
                 '--kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle',
-              ] + options.k3s.additional_args,
+              ] + tlsSANs + options.k3s.additional_args,
               env: [],
               securityContext: {
                 allowPrivilegeEscalation: false,
@@ -264,7 +266,7 @@ local cluster = function(name, options)
               args: [
                 '--name=' + name,
                 '--out-kube-config-secret=vc-%s-kubeconfig' % name,
-              ] + options.syncer.additional_args,
+              ] + tlsSANs + options.syncer.additional_args,
               livenessProbe: {
                 httpGet: {
                   path: '/healthz',
