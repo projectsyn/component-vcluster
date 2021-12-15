@@ -1,6 +1,7 @@
 local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
 local ocpRoute = import 'ocp-route.libsonnet';
+local postSetup = import 'post-setup.libsonnet';
 local inv = kap.inventory();
 // The hiera parameters for the component
 local params = inv.parameters.vcluster;
@@ -345,7 +346,9 @@ local cluster = function(name, options)
     headlessService,
     statefulSet,
     if options.ingress.host != null then ingress,
-  ] + if options.ocp_route.host != null then ocpRoute.RouteCreateJob(name, 'vc-%s-kubeconfig' % name, options.ocp_route.host, options) else []);
+    if std.length(options.additional_manifests) > 0 then postSetup.ApplyManifests('%s-apply-manifests' % name, 'vc-%s-kubeconfig' % name, options.additional_manifests),
+    if options.syn.registration_url != null then postSetup.Synfection('%s-synfection' % name, 'vc-%s-kubeconfig' % name, options.syn.registration_url),
+  ] + if options.ocp_route.host != null then ocpRoute.RouteCreateJob(name, 'vc-%s-kubeconfig' % name, options.ocp_route.host) else []);
 
 {
   Cluster: cluster,

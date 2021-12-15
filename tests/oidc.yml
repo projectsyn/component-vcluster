@@ -12,3 +12,20 @@ parameters:
         - --kube-apiserver-arg=oidc-client-id=local
         - --kube-apiserver-arg=oidc-username-claim=email
         - --kube-apiserver-arg=oidc-groups-claim=groups
+
+    additional_manifests:
+      cluster-admin:
+        kind: ClusterRoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1
+        metadata:
+          name: oidc-cluster-admin
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+          - kind: Group
+            name: admin
+
+    syn:
+      registration_url: https://syn.example.com/steward/install.json?token=w84kxjbhf

@@ -13,17 +13,17 @@
 
 local kap = import 'lib/kapitan.libjsonnet';
 local kube = import 'lib/kube.libjsonnet';
+
 local inv = kap.inventory();
-// The hiera parameters for the component
 local params = inv.parameters.vcluster;
 
-local script = importstr './ocp-route/create-route.sh';
+local script = importstr './scripts/create-route.sh';
 
-local routeCreateJob = function(name, secretName, host, options)
+local routeCreateJob = function(name, secretName, host)
   local jobName = name + '-create-route';
 
   local role = kube.Role(jobName) {
-    metadata+: { namespace: options.namespace },
+    metadata+: { namespace: params.namespace },
     rules: [
       {
         apiGroups: [ 'route.openshift.io' ],
@@ -40,18 +40,18 @@ local routeCreateJob = function(name, secretName, host, options)
   };
 
   local serviceAccount = kube.ServiceAccount(jobName) {
-    metadata+: { namespace: options.namespace },
+    metadata+: { namespace: params.namespace },
   };
 
   local roleBinding = kube.RoleBinding(jobName) {
-    metadata+: { namespace: options.namespace },
+    metadata+: { namespace: params.namespace },
     subjects_: [ serviceAccount ],
     roleRef_: role,
   };
 
   local routeTemplate = std.manifestJsonEx(kube._Object('route.openshift.io/v1', 'Route', name) {
     metadata+: {
-      namespace: options.namespace,
+      namespace: params.namespace,
     },
     spec: {
       host: host,
@@ -74,7 +74,7 @@ local routeCreateJob = function(name, secretName, host, options)
 
   local job = kube.Job(jobName) {
     metadata+: {
-      namespace: options.namespace,
+      namespace: params.namespace,
       annotations+: {
         'argocd.argoproj.io/hook': 'PostSync',
       },
@@ -84,14 +84,14 @@ local routeCreateJob = function(name, secretName, host, options)
         spec+: {
           serviceAccountName: serviceAccount.metadata.name,
           containers_+: {
-            patch_crds: kube.Container(name) {
-              image: '%s/%s:%s' % [ options.images.kubectl.repository, options.images.kubectl.image, options.images.kubectl.tag ],
+            create_route: kube.Container(name) {
+              image: '%s/%s:%s' % [ params.images.kubectl.repository, params.images.kubectl.image, params.images.kubectl.tag ],
               workingDir: '/export',
               command: [ 'sh' ],
               args: [ '-eu', '-c', script, '--', routeTemplate ],
               env: [
                 { name: 'HOME', value: '/export' },
-                { name: 'NAMESPACE', value: options.namespace },
+                { name: 'NAMESPACE', value: params.namespace },
                 { name: 'VCLUSTER_STS_NAME', value: name },
               ],
               volumeMounts: [

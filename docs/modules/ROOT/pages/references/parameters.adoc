@@ -155,6 +155,43 @@ The re-encyption breaks the mTLS user authentication.
 A secondary authentication method, like OIDC, should be configured.
 
 
+== `syn.registration_url`
+
+[horizontal]
+type:: string
+default:: `null`
+example:: `https://api.syn.example.com/install/steward.json?token=cHJvamVjdCBzeW4gaXMgbG92ZQo=`
+
+If set, the vcluster is registered with a Project SYN instance.
+
+
+== `additional_manifests`
+
+[horizontal]
+type:: dict
+default:: `{}`
+example::
++
+[source,yaml]
+----
+additional_manifests:
+  cluster-admin:
+    kind: ClusterRoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: oidc-cluster-admin
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cluster-admin
+    subjects:
+    - kind: Group
+      name: admin
+----
+
+Manifests that should be applied to the vcluster after startup.
+
+
 == Example
 
 [source,yaml]
