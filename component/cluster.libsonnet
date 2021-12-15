@@ -347,7 +347,7 @@ local cluster = function(name, options)
     statefulSet,
     if options.ingress.host != null then ingress,
     if std.length(options.additional_manifests) > 0 then postSetup.ApplyManifests('%s-apply-manifests' % name, 'vc-%s-kubeconfig' % name, options.additional_manifests),
-    if options.syn.registration_url != null then postSetup.Synfection('%s-synfection' % name, 'vc-%s-kubeconfig' % name, options.syn.registration_url),
+    if options.syn.registration_url != null then postSetup.Synthesize('%s-synthesize' % name, 'vc-%s-kubeconfig' % name, options.syn.registration_url),
   ] + if options.ocp_route.host != null then ocpRoute.RouteCreateJob(name, 'vc-%s-kubeconfig' % name, options.ocp_route.host) else []);
 
 {

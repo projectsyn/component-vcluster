@@ -4,7 +4,7 @@ local kube = import 'lib/kube.libjsonnet';
 local inv = kap.inventory();
 local params = inv.parameters.vcluster;
 
-local synfection = function(jobName, secretName, url)
+local synthesize = function(jobName, secretName, url)
   kube.Job(jobName) {
     metadata+: {
       namespace: params.namespace,
@@ -20,7 +20,7 @@ local synfection = function(jobName, secretName, url)
               image: '%s/%s:%s' % [ params.images.kubectl.repository, params.images.kubectl.image, params.images.kubectl.tag ],
               workingDir: '/export',
               command: [ 'sh' ],
-              args: [ '-eu', '-c', importstr './scripts/synfection.sh', '--', url ],
+              args: [ '-eu', '-c', importstr './scripts/synthesize.sh', '--', url ],
               env: [
                 { name: 'HOME', value: '/export' },
               ],
@@ -83,6 +83,6 @@ local applyManifests = function(jobName, secretName, manifests)
 
 
 {
-  Synfection: synfection,
+  Synthesize: synthesize,
   ApplyManifests: applyManifests,
 }

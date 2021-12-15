@@ -337,8 +337,8 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: PostSync
   labels:
-    name: oidc-synfection
-  name: oidc-synfection
+    name: oidc-synthesize
+  name: oidc-synthesize
   namespace: testns
 spec:
   completions: 1
@@ -346,7 +346,7 @@ spec:
   template:
     metadata:
       labels:
-        name: oidc-synfection
+        name: oidc-synthesize
     spec:
       containers:
         - args:
@@ -356,7 +356,7 @@ spec:
               \necho \"Checking for namespace 'syn'...\"\n\nexists=$(kubectl --kubeconfig\
               \ \"$vcluster_kubeconfig\" get namespace syn --ignore-not-found)\nif\
               \ [ -n \"$exists\" ]; then\n  echo \"Namespace 'syn' exists. Skipping\
-              \ synfection.\"\n  exit 0\nfi\n\necho \"Starting synfection...\"\n\n\
+              \ synthesize.\"\n  exit 0\nfi\n\necho \"Starting synthesize...\"\n\n\
               kubectl --kubeconfig \"$vcluster_kubeconfig\" apply -f \"$1\"\n\necho\
               \ \"Done!\"\n"
             - --
@@ -368,7 +368,7 @@ spec:
               value: /export
           image: quay.io/bitnami/kubectl:1.22.4
           imagePullPolicy: IfNotPresent
-          name: oidc-synfection
+          name: oidc-synthesize
           ports: []
           stdin: false
           tty: false

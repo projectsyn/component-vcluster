@@ -7,11 +7,11 @@ echo "Checking for namespace 'syn'..."
 
 exists=$(kubectl --kubeconfig "$vcluster_kubeconfig" get namespace syn --ignore-not-found)
 if [ -n "$exists" ]; then
-  echo "Namespace 'syn' exists. Skipping synfection."
+  echo "Namespace 'syn' exists. Skipping synthesize."
   exit 0
 fi
 
-echo "Starting synfection..."
+echo "Starting synthesize..."
 
 kubectl --kubeconfig "$vcluster_kubeconfig" apply -f "$1"
 
