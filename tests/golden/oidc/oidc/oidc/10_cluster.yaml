@@ -240,3 +240,152 @@ spec:
                   name: https
             path: /
             pathType: Prefix
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+  labels:
+    name: oidc-apply-manifests
+  name: oidc-apply-manifests
+  namespace: testns
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        name: oidc-apply-manifests
+    spec:
+      containers:
+        - args:
+            - -eu
+            - -c
+            - "#!/bin/sh\nset -eu\n\nvcluster_kubeconfig=/etc/vcluster-kubeconfig/config\n\
+              \necho \"Applying manifests...\"\n\nfor manifest in \"$@\"\ndo\n  printf\
+              \ \"$manifest\" | kubectl --kubeconfig \"$vcluster_kubeconfig\" apply\
+              \ -f - -oyaml\ndone\n\necho \"Done!\"\n"
+            - --
+            - '{
+
+              "apiVersion": "rbac.authorization.k8s.io/v1",
+
+              "kind": "ClusterRoleBinding",
+
+              "metadata": {
+
+              "name": "oidc-cluster-admin"
+
+              },
+
+              "roleRef": {
+
+              "apiGroup": "rbac.authorization.k8s.io",
+
+              "kind": "ClusterRole",
+
+              "name": "cluster-admin"
+
+              },
+
+              "subjects": [
+
+              {
+
+              "kind": "Group",
+
+              "name": "admin"
+
+              }
+
+              ]
+
+              }'
+          command:
+            - sh
+          env:
+            - name: HOME
+              value: /export
+          image: quay.io/bitnami/kubectl:1.22.4
+          imagePullPolicy: IfNotPresent
+          name: oidc-apply-manifests
+          ports: []
+          stdin: false
+          tty: false
+          volumeMounts:
+            - mountPath: /export
+              name: export
+            - mountPath: /etc/vcluster-kubeconfig
+              name: kubeconfig
+              readOnly: true
+          workingDir: /export
+      imagePullSecrets: []
+      initContainers: []
+      restartPolicy: OnFailure
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: export
+        - name: kubeconfig
+          secret:
+            secretName: vc-oidc-kubeconfig
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+  labels:
+    name: oidc-synthesize
+  name: oidc-synthesize
+  namespace: testns
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        name: oidc-synthesize
+    spec:
+      containers:
+        - args:
+            - -eu
+            - -c
+            - "#!/bin/sh\nset -eu\n\nvcluster_kubeconfig=/etc/vcluster-kubeconfig/config\n\
+              \necho \"Checking for namespace 'syn'...\"\n\nexists=$(kubectl --kubeconfig\
+              \ \"$vcluster_kubeconfig\" get namespace syn --ignore-not-found)\nif\
+              \ [ -n \"$exists\" ]; then\n  echo \"Namespace 'syn' exists. Skipping\
+              \ synthesize.\"\n  exit 0\nfi\n\necho \"Starting synthesize...\"\n\n\
+              kubectl --kubeconfig \"$vcluster_kubeconfig\" apply -f \"$1\"\n\necho\
+              \ \"Done!\"\n"
+            - --
+            - https://syn.example.com/steward/install.json?token=w84kxjbhf
+          command:
+            - sh
+          env:
+            - name: HOME
+              value: /export
+          image: quay.io/bitnami/kubectl:1.22.4
+          imagePullPolicy: IfNotPresent
+          name: oidc-synthesize
+          ports: []
+          stdin: false
+          tty: false
+          volumeMounts:
+            - mountPath: /export
+              name: export
+            - mountPath: /etc/vcluster-kubeconfig
+              name: kubeconfig
+              readOnly: true
+          workingDir: /export
+      imagePullSecrets: []
+      initContainers: []
+      restartPolicy: OnFailure
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: export
+        - name: kubeconfig
+          secret:
+            secretName: vc-oidc-kubeconfig

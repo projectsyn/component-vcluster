@@ -37,3 +37,8 @@ parameters:
       additional_args: []
     syncer:
       additional_args: []
+
+    additional_manifests: {}
+
+    syn:
+      registration_url: null
