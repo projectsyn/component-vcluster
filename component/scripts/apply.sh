@@ -1,7 +1,12 @@
 #!/bin/sh
 set -eu
 
-vcluster_kubeconfig=/etc/vcluster-kubeconfig/config
+cp /etc/vcluster-kubeconfig/config ./config
+vcluster_kubeconfig=./config
+
+echo "Setting server URL..."
+
+kubectl --kubeconfig "$vcluster_kubeconfig" config set clusters.local.server "$VCLUSTER_SERVER_URL"
 
 echo "Applying manifests..."
 

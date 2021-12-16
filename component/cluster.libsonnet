@@ -206,6 +206,12 @@ local cluster = function(name, options)
               emptyDir: {},
             },
           ],
+          local tlsSANs = [
+            '--tls-san=%s.%s.svc.cluster.local' % [ name, options.namespace ],
+            '--tls-san=%s.%s.svc' % [ name, options.namespace ],
+            '--tls-san=%s.%s' % [ name, options.namespace ],
+            '--tls-san=%s' % [ name ],
+          ],
           containers: [
             {
               image: formatImage(options.images.k3s),
@@ -233,7 +239,7 @@ local cluster = function(name, options)
                 '--flannel-backend=none',
                 '--service-cidr=%s' % options.host_service_cidr,
                 '--kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle',
-              ] + options.k3s.additional_args,
+              ] + tlsSANs + options.k3s.additional_args,
               env: [],
               securityContext: {
                 allowPrivilegeEscalation: false,
@@ -260,7 +266,7 @@ local cluster = function(name, options)
               args: [
                 '--name=' + name,
                 '--out-kube-config-secret=vc-%s-kubeconfig' % name,
-              ] + options.syncer.additional_args,
+              ] + tlsSANs + options.syncer.additional_args,
               livenessProbe: {
                 httpGet: {
                   path: '/healthz',
@@ -346,8 +352,8 @@ local cluster = function(name, options)
     headlessService,
     statefulSet,
     if options.ingress.host != null then ingress,
-    if std.length(options.additional_manifests) > 0 then postSetup.ApplyManifests('%s-apply-manifests' % name, 'vc-%s-kubeconfig' % name, options.additional_manifests),
-    if options.syn.registration_url != null then postSetup.Synthesize('%s-synthesize' % name, 'vc-%s-kubeconfig' % name, options.syn.registration_url),
+    if std.length(options.additional_manifests) > 0 then postSetup.ApplyManifests(name, 'vc-%s-kubeconfig' % name, options.additional_manifests),
+    if options.syn.registration_url != null then postSetup.Synthesize(name, 'vc-%s-kubeconfig' % name, options.syn.registration_url),
   ] + if options.ocp_route.host != null then ocpRoute.RouteCreateJob(name, 'vc-%s-kubeconfig' % name, options.ocp_route.host) else []);
 
 {

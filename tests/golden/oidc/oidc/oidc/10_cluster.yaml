@@ -158,6 +158,10 @@ spec:
             - --flannel-backend=none
             - --service-cidr=172.30.0.0/16
             - --kube-controller-manager-arg=controllers=*,-nodeipam,-nodelifecycle,-persistentvolume-binder,-attachdetach,-persistentvolume-expander,-cloud-node-lifecycle
+            - --tls-san=oidc.testns.svc.cluster.local
+            - --tls-san=oidc.testns.svc
+            - --tls-san=oidc.testns
+            - --tls-san=oidc
             - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
             - --kube-apiserver-arg=oidc-client-id=local
             - --kube-apiserver-arg=oidc-username-claim=email
@@ -181,6 +185,10 @@ spec:
         - args:
             - --name=oidc
             - --out-kube-config-secret=vc-oidc-kubeconfig
+            - --tls-san=oidc.testns.svc.cluster.local
+            - --tls-san=oidc.testns.svc
+            - --tls-san=oidc.testns
+            - --tls-san=oidc
           env: []
           image: docker.io/loftsh/vcluster:0.5.0-beta.0
           livenessProbe:
@@ -262,10 +270,13 @@ spec:
         - args:
             - -eu
             - -c
-            - "#!/bin/sh\nset -eu\n\nvcluster_kubeconfig=/etc/vcluster-kubeconfig/config\n\
-              \necho \"Applying manifests...\"\n\nfor manifest in \"$@\"\ndo\n  printf\
-              \ \"$manifest\" | kubectl --kubeconfig \"$vcluster_kubeconfig\" apply\
-              \ -f - -oyaml\ndone\n\necho \"Done!\"\n"
+            - "#!/bin/sh\nset -eu\n\ncp /etc/vcluster-kubeconfig/config ./config\n\
+              vcluster_kubeconfig=./config\n\necho \"Setting server URL...\"\n\nkubectl\
+              \ --kubeconfig \"$vcluster_kubeconfig\" config set clusters.local.server\
+              \ \"$VCLUSTER_SERVER_URL\"\n\necho \"Applying manifests...\"\n\nfor\
+              \ manifest in \"$@\"\ndo\n  printf \"$manifest\" | kubectl --kubeconfig\
+              \ \"$vcluster_kubeconfig\" apply -f - -oyaml\ndone\n\necho \"Done!\"\
+              \n"
             - --
             - '{
 
@@ -307,6 +318,8 @@ spec:
           env:
             - name: HOME
               value: /export
+            - name: VCLUSTER_SERVER_URL
+              value: https://oidc:443
           image: quay.io/bitnami/kubectl:1.22.4
           imagePullPolicy: IfNotPresent
           name: oidc-apply-manifests
@@ -352,13 +365,15 @@ spec:
         - args:
             - -eu
             - -c
-            - "#!/bin/sh\nset -eu\n\nvcluster_kubeconfig=/etc/vcluster-kubeconfig/config\n\
-              \necho \"Checking for namespace 'syn'...\"\n\nexists=$(kubectl --kubeconfig\
-              \ \"$vcluster_kubeconfig\" get namespace syn --ignore-not-found)\nif\
-              \ [ -n \"$exists\" ]; then\n  echo \"Namespace 'syn' exists. Skipping\
-              \ synthesize.\"\n  exit 0\nfi\n\necho \"Starting synthesize...\"\n\n\
-              kubectl --kubeconfig \"$vcluster_kubeconfig\" apply -f \"$1\"\n\necho\
-              \ \"Done!\"\n"
+            - "#!/bin/sh\nset -eu\n\ncp /etc/vcluster-kubeconfig/config ./config\n\
+              vcluster_kubeconfig=./config\n\necho \"Setting server URL...\"\n\nkubectl\
+              \ --kubeconfig \"$vcluster_kubeconfig\" config set clusters.local.server\
+              \ \"$VCLUSTER_SERVER_URL\"\n\necho \"Checking for namespace 'syn'...\"\
+              \n\nexists=$(kubectl --kubeconfig \"$vcluster_kubeconfig\" get namespace\
+              \ syn --ignore-not-found)\nif [ -n \"$exists\" ]; then\n  echo \"Namespace\
+              \ 'syn' exists. Skipping synthesize.\"\n  exit 0\nfi\n\necho \"Starting\
+              \ synthesize...\"\n\nkubectl --kubeconfig \"$vcluster_kubeconfig\" apply\
+              \ -f \"$1\"\n\necho \"Done!\"\n"
             - --
             - https://syn.example.com/steward/install.json?token=w84kxjbhf
           command:
@@ -366,6 +381,8 @@ spec:
           env:
             - name: HOME
               value: /export
+            - name: VCLUSTER_SERVER_URL
+              value: https://oidc:443
           image: quay.io/bitnami/kubectl:1.22.4
           imagePullPolicy: IfNotPresent
           name: oidc-synthesize
