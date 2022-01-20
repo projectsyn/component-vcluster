@@ -28,7 +28,8 @@ parameters:
     ingress:
       host: null
       labels: {}
-      annotations: {}
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-production
 
     ocp_route:
       host: null

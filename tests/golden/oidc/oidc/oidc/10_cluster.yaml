@@ -231,7 +231,8 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations: {}
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
   labels:
     name: oidc
   name: oidc
