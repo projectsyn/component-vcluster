@@ -248,6 +248,10 @@ spec:
                   name: https
             path: /
             pathType: Prefix
+  tls:
+    - hosts:
+        - testcluster.local
+      secretName: oidc-tls
 ---
 apiVersion: batch/v1
 kind: Job

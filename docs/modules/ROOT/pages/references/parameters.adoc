@@ -110,6 +110,7 @@ type:: string
 default:: `null`
 
 If set, an ingress with the defined host is created.
+The ingress is created with TLS spec for the same host.
 
 
 == `ingress.annotations`
@@ -127,6 +128,7 @@ ingress:
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-production
 ----
 
 Additional annotations for the ingress object.

@@ -341,6 +341,14 @@ local cluster = function(name, options)
           },
         },
       ],
+      tls: [
+        {
+          hosts: [
+            options.ingress.host,
+          ],
+          secretName: name + '-tls',
+        },
+      ],
     },
   };
 
