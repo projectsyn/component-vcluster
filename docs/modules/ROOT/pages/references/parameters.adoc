@@ -110,13 +110,16 @@ type:: string
 default:: `null`
 
 If set, an ingress with the defined host is created.
+The ingress is created with TLS spec for the same host.
+
+NOTE: It's assumed that `cert-manager` is running on the cluster to provision Let's Encrypt certificates.
 
 
 == `ingress.annotations`
 
 [horizontal]
 type:: dict
-default:: `{}`
+default:: `{cert-manager.io/cluster-issuer: letsencrypt-production}`
 example::
 +
 [source,yaml]
