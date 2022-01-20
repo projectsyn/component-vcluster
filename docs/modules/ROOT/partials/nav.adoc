@@ -1,2 +1,7 @@
 * xref:index.adoc[Home]
+
+.Tutorials
+* xref:tutorials/installation-openshift.adoc[Installation On OpenShift]
+
+.Technical Reference
 * xref:references/parameters.adoc[Parameters]
