@@ -1,0 +1,105 @@
+# Install vcluster on OpenShift
+
+This page guides through the installation process of vcluster on OpenShift and sets up authentication with OIDC using Keycloak.
+
+At the end of this tutorial we will have:
+
+* a vcluster instance running on OpenShift
+* vcluster's Kubernetes API exposed with an Ingress
+* Let's Encrypt certificates provisioned by `cert-manager`
+* OIDC authentication
+
+== Prerequisites
+
+* Understanding how to configure and compile cluster catalogs
+* Admin access to existing Keycloak instances
+* `kubectl`
+* `base64`
+* `jq`
+
+== Deploy vcluster and Ingress
+
+. Configure catalog
++
+[source,yaml]
+----
+parameters:
+  vcluster:
+    host_service_cidr: 172.30.0.0/16 <1>
+    k3s:
+      additional_args:
+        - --kube-apiserver-arg=oidc-issuer-url=https://keycloak.example.com/auth/realms/realm <2>
+        - --kube-apiserver-arg=oidc-client-id=client-id <3>
+        - --kube-apiserver-arg=oidc-username-claim=preferred_username
+        - --kube-apiserver-arg=oidc-groups-claim=groups
+    ingress:
+      host: vcluster.example.com
+----
+<1> The host service CIDR (see xref:references/parameters.adoc#_host_service_cidr[host_service_cidr in parameters])
+<2> The Keycloak URL and realm
+<3> The client ID in Keycloak
+
+. Compile and push cluster catalog
++
+[NOTE]
+====
+This will create 2 OpenShift Route objects; one for the Ingress and one for the Let's Encrypt HTTP01 verification.
+====
+
+. Create DNS record for custom Ingress host and point to the cluster's Router.
+
+. Wait until Let's Encrypt has provisioned a valid certificate and only 1 Route exists for the same Ingress.
++
+[TIP]
+====
+You can inspect the certificate provisioning with `kubecl get certificate,order`.
+====
+
+. Get CA certificate from Secret.
++
+[source,bash]
+----
+INSTANCE_NAME=vcluster <1>
+NS=syn-${INSTANCE_NAME} <2>
+CA_CERT=$(kubectl -n ${NS} get secret vc-${INSTANCE_NAME}-kubeconfig -o jsonpath='{.data.certificate-authority}' | base64 --decode)
+----
+<1> The instance name
+<2> The target namespace in which vcluster is being installed
+
+. Patch generated Route.
++
+[NOTE]
+====
+This step is necessary so that the OpenShift Router trusts the generated CA certificate of the vcluster.
+====
++
+[source,bash]
+----
+route_name=$(kubectl -n ${NS} get route -o json | jq -r '.items[].metadata | select(.ownerReferences != null) | select(.ownerReferences[].name=="'${INSTANCE_NAME}'") | .name')
+patch_cert="$(echo ${CA_CERT} | sed 's/$/\\n/' | tr -d '\n')"
+patch_file=$(mktemp)
+echo -E '{"spec":{"tls":{"destinationCACertificate":"'$(echo -E ${patch_cert})'"}}}' > ${patch_file}
+kubectl -n ${NS} patch route ${route_name} --patch-file ${patch_file}
+rm ${patch_file}
+----
+
+== Configure Keycloak
+
+. Add Role to client
++
+In the client settings, select the "Roles" tab.
+Click "Add Role" button and enter the role name "Admin" with a description and hit save.
+
+. Configure Mapper to include Roles in `groups` token
++
+In the client settings, select the "Mappers" tab.
+Click "Create" button and configure the following settings before saving:
++
+[source,console]
+----
+Name = groups
+Mapper Type = User Client Role
+Client ID = <the-client-id>
+Token Claim Name = "groups"
+Claim JSON Type = String
+----
