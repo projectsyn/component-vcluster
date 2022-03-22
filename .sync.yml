@@ -2,6 +2,12 @@
   componentName: vcluster
   githubUrl: https://github.com/projectsyn/component-vcluster
   feature_goldenTests: true
+  testMatrix:
+    key: instance
+    entries:
+      - defaults
+      - oidc
+      - openshift
 
 docs/antora.yml:
   name: vcluster
@@ -9,13 +15,6 @@ docs/antora.yml:
 .github/workflows/test.yaml:
   test_makeTarget: test -e instance=${{ matrix.instance }}
   goldenTest_makeTarget: golden-diff -e instance=${{ matrix.instance }}
-  matrix:
-    key: instance
-    entries:
-      - defaults
-      - oidc
-      - openshift
-
 Makefile:
   includes:
     - Makefile.custom.mk
