@@ -1,7 +1,7 @@
 parameters:
   vcluster:
-    =_metadata: {}
-    multi_instance: true
+    =_metadata:
+      multi_instance: true
     namespace: syn-${_instance}
 
     host_service_cidr: null
