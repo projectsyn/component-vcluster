@@ -1,0 +1,148 @@
+= Configure OIDC
+
+There is the option to authenticate to vcluster using OpenID Connect.
+This guide assumes that you have setup a vcluster using this component and you have access to an OIDC provider.
+
+
+== Configure IDP
+
+[NOTE]
+====
+This how-to explains how to configure Keycloak, but other OIDC providers should work similarly.
+====
+
+. Open Keycloak and create an OIDC client as follows:
++
+[source,console]
+----
+Client ID: YOUR_CLIENT_ID
+Redirect URIs:
+  http://localhost:8000
+  http://localhost:18000
+Access Type: public
+----
+
+. Add Role to client
++
+In the client settings, select the "Roles" tab.
+Click "Add Role" button and enter the role name "admin" with a description and hit save.
++
+You should assign this role to every user that needs admin access to the vcluster.
+
+. Configure Mapper to include Roles in `groups` token
++
+In the client settings, select the "Mappers" tab.
+Click "Create" button and configure the following settings before saving:
++
+[source,console]
+----
+Name = groups
+Mapper Type = User Client Role
+Client ID = YOUR_CLIENT_ID
+Token Claim Name = "groups"
+Claim JSON Type = String
+----
+
+== Configure vcluster
+
+. Add OIDC config to catalog
++
+[source,yaml]
+----
+parameters:
+  vcluster:
+    k3s:
+      additional_args:
+        - --kube-apiserver-arg=oidc-issuer-url=https://keycloak.example.com/auth/realms/realm <1>
+        - --kube-apiserver-arg=oidc-client-id=$YOUR_CLIENT_ID <2>
+        - --kube-apiserver-arg=oidc-username-claim=preferred_username
+        - --kube-apiserver-arg=oidc-groups-claim=groups
+    additional_manifests: <3>
+      cluster-admin:
+        kind: ClusterRoleBinding
+        apiVersion: rbac.authorization.k8s.io/v1
+        metadata:
+          name: oidc-cluster-admin
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: cluster-admin
+        subjects:
+          - kind: Group
+            name: admin
+----
+<1> The Keycloak URL and realm
+<2> The client ID in Keycloak
+<3> Assign cluster-admin to the role created in the OIDC client
+
+
+== (Optional) Setup kubelogin
+
+You can now authenticate to the vcluster Kubernetes API by using https://github.com/int128/kubelogin[kubelogin].
+
+. Install kubelogin
++
+[source,shell]
+----
+# Homebrew (macOS and Linux)
+brew install int128/kubelogin/kubelogin
+
+# Krew (macOS, Linux, Windows and ARM)
+kubectl krew install oidc-login <1>
+
+# Chocolatey (Windows)
+choco install kubelogin
+----
+<1> Assumes that you have installed https://github.com/kubernetes-sigs/krew[krew]
+
+. Add a kubeconfig
++
+[source,yaml]
+----
+apiVersion: v1
+clusters:
+- cluster:
+    server: https://api.example.com/ <1>
+  name: vcluster
+contexts:
+- context:
+    cluster: vcluster
+    namespace: default
+    user: oidc-user
+  name: Default
+current-context: Default
+kind: Config
+preferences: {}
+users:
+- name: oidc-user
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      args:
+      - oidc-login
+      - get-token
+      - --oidc-issuer-url=https://keycloak.example.com/auth/realms/realm <2>
+      - --oidc-client-id=$YOUR_CLIENT_ID <3>
+      - --oidc-extra-scope=email offline_access profile openid
+      command: kubectl
+      env: null
+      interactiveMode: IfAvailable
+      provideClusterInfo: false
+----
+<1> Ingress of the vcluster
+<2> The Keycloak URL and realm
+<3> The client ID in Keycloak
+
+
+. Make sure you can access the vcluster
++
+[source,shell]
+----
+KUBECOFIG=<your-new-kubeconfig> kubectl get ns
+----
++
+A browser window should open where you can authenticate yourself
+
+== Links
+
+. https://github.com/int128/kubelogin/blob/master/docs/setup.md[Kubelogin setup guide]
