@@ -1,7 +1,8 @@
 * xref:index.adoc[Home]
 
-.Tutorials
+.How-to guides
 * xref:tutorials/installation-openshift.adoc[Installation On OpenShift]
+* xref:how-tos/oidc.adoc[Setup OIDC Integration]
 
 .Technical Reference
 * xref:references/parameters.adoc[Parameters]
