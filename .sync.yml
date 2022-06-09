@@ -9,9 +9,6 @@
       - oidc
       - openshift
 
-docs/antora.yml:
-  name: vcluster
-  title: vcluster
 .github/workflows/test.yaml:
   test_makeTarget: test -e instance=${{ matrix.instance }}
   goldenTest_makeTarget: golden-diff -e instance=${{ matrix.instance }}
