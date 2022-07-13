@@ -34,10 +34,13 @@ parameters:
         - --kube-apiserver-arg=oidc-groups-claim=groups
     ingress:
       host: vcluster.example.com
+      annotations:
+        route.openshift.io/termination: reencrypt <4>
 ----
 <1> The host service CIDR (see xref:references/parameters.adoc#_host_service_cidr[host_service_cidr in parameters])
 <2> The Keycloak URL and realm
 <3> The client ID in Keycloak
+<4> Needed to communicate with the encrypted vcluster endpoint
 
 . Compile and push cluster catalog
 +
