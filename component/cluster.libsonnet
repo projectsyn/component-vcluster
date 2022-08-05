@@ -3,12 +3,11 @@ local kube = import 'lib/kube.libjsonnet';
 local ocpRoute = import 'ocp-route.libsonnet';
 local postSetup = import 'post-setup.libsonnet';
 local inv = kap.inventory();
+local common = import 'common.libsonnet';
 // The hiera parameters for the component
 local params = inv.parameters.vcluster;
 
 local isOpenshift = std.startsWith(inv.parameters.facts.distribution, 'openshift');
-
-local formatImage = function(img) '%(repository)s/%(image)s:%(tag)s' % img;
 
 local cluster = function(name, options)
   local sa = kube.ServiceAccount('vc-' + name) {
@@ -214,7 +213,7 @@ local cluster = function(name, options)
           ],
           containers: [
             {
-              image: formatImage(options.images.k3s),
+              image: common.formatImage(options.images.k3s),
               name: 'vcluster',
               command: [
                 '/bin/k3s',
@@ -262,7 +261,7 @@ local cluster = function(name, options)
             },
             {
               name: 'syncer',
-              image: formatImage(options.images.syncer),
+              image: common.formatImage(options.images.syncer),
               args: [
                 '--name=' + name,
                 '--out-kube-config-secret=vc-%s-kubeconfig' % name,

@@ -16,6 +16,7 @@ local kube = import 'lib/kube.libjsonnet';
 
 local inv = kap.inventory();
 local params = inv.parameters.vcluster;
+local common = import 'common.libsonnet';
 
 local script = importstr './scripts/create-route.sh';
 
@@ -85,7 +86,7 @@ local routeCreateJob = function(name, secretName, host)
           serviceAccountName: serviceAccount.metadata.name,
           containers_+: {
             create_route: kube.Container(name) {
-              image: '%s/%s:%s' % [ params.images.kubectl.repository, params.images.kubectl.image, params.images.kubectl.tag ],
+              image: common.formatImage(params.images.kubectl),
               workingDir: '/export',
               command: [ 'sh' ],
               args: [ '-eu', '-c', script, '--', routeTemplate ],

@@ -3,6 +3,7 @@ local kube = import 'lib/kube.libjsonnet';
 
 local inv = kap.inventory();
 local params = inv.parameters.vcluster;
+local common = import 'common.libsonnet';
 
 local synthesize = function(name, secretName, url)
   local jobName = '%s-synthesize' % name;
@@ -18,7 +19,7 @@ local synthesize = function(name, secretName, url)
         spec+: {
           containers_+: {
             patch_crds: kube.Container(jobName) {
-              image: '%s/%s:%s' % [ params.images.kubectl.repository, params.images.kubectl.image, params.images.kubectl.tag ],
+              image: common.formatImage(params.images.kubectl),
               workingDir: '/export',
               command: [ 'sh' ],
               args: [ '-eu', '-c', importstr './scripts/synthesize.sh', '--', url ],
@@ -62,7 +63,7 @@ local applyManifests = function(name, secretName, manifests)
         spec+: {
           containers_+: {
             patch_crds: kube.Container(jobName) {
-              image: '%s/%s:%s' % [ params.images.kubectl.repository, params.images.kubectl.image, params.images.kubectl.tag ],
+              image: common.formatImage(params.images.kubectl),
               workingDir: '/export',
               command: [ 'sh' ],
               args: [ '-eu', '-c', importstr './scripts/apply.sh', '--' ] + std.map(function(m) std.manifestJsonEx(m, ''), manifestArray),
