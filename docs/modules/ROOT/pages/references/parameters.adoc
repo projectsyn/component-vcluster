@@ -46,6 +46,10 @@ Dictionary containing the container images used by this component.
 
 The `kubectl` image is used to create OCP routes. The `kubectl` and `jq` binaries are required in this image.
 
+[NOTE]
+The deprecated parameter `repository` is still supported for backwards compatibility.
+Use `registry` instead.
+`repository` overrides the `registry` parameter if both are set.
 
 == `k3s.additional_args`
 
