@@ -244,6 +244,20 @@ spec:
 ---
 apiVersion: v1
 data:
+  manifests: '---
+
+
+    '
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels:
+    name: defaults-init-manifests
+  name: defaults-init-manifests
+  namespace: syn-defaults
+---
+apiVersion: v1
+data:
   coredns.yaml: "apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: coredns\n\
     \  namespace: kube-system\n---\napiVersion: rbac.authorization.k8s.io/v1\nkind:\
     \ ClusterRole\nmetadata:\n  labels:\n    kubernetes.io/bootstrapping: rbac-defaults\n\

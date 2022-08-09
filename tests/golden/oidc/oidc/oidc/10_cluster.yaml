@@ -241,6 +241,21 @@ spec:
 ---
 apiVersion: v1
 data:
+  manifests: "---\n\"apiVersion\": \"rbac.authorization.k8s.io/v1\"\n\"kind\": \"\
+    ClusterRoleBinding\"\n\"metadata\":\n  \"name\": \"oidc-cluster-admin\"\n\"roleRef\"\
+    :\n  \"apiGroup\": \"rbac.authorization.k8s.io\"\n  \"kind\": \"ClusterRole\"\n\
+    \  \"name\": \"cluster-admin\"\n\"subjects\":\n- \"kind\": \"Group\"\n  \"name\"\
+    : \"admin\"\n"
+kind: ConfigMap
+metadata:
+  annotations: {}
+  labels:
+    name: oidc-init-manifests
+  name: oidc-init-manifests
+  namespace: testns
+---
+apiVersion: v1
+data:
   coredns.yaml: "apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: coredns\n\
     \  namespace: kube-system\n---\napiVersion: rbac.authorization.k8s.io/v1\nkind:\
     \ ClusterRole\nmetadata:\n  labels:\n    kubernetes.io/bootstrapping: rbac-defaults\n\
@@ -338,101 +353,6 @@ spec:
     - hosts:
         - testcluster.local
       secretName: oidc-tls
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-  labels:
-    name: oidc-apply-manifests
-  name: oidc-apply-manifests
-  namespace: testns
-spec:
-  completions: 1
-  parallelism: 1
-  template:
-    metadata:
-      labels:
-        name: oidc-apply-manifests
-    spec:
-      containers:
-        - args:
-            - -eu
-            - -c
-            - "#!/bin/sh\nset -eu\n\ncp /etc/vcluster-kubeconfig/config ./config\n\
-              vcluster_kubeconfig=./config\n\necho \"Setting server URL...\"\n\nkubectl\
-              \ --kubeconfig \"$vcluster_kubeconfig\" config set clusters.local.server\
-              \ \"$VCLUSTER_SERVER_URL\"\n\necho \"Applying manifests...\"\n\nfor\
-              \ manifest in \"$@\"\ndo\n  printf \"$manifest\" | kubectl --kubeconfig\
-              \ \"$vcluster_kubeconfig\" apply -f - -oyaml\ndone\n\necho \"Done!\"\
-              \n"
-            - --
-            - '{
-
-              "apiVersion": "rbac.authorization.k8s.io/v1",
-
-              "kind": "ClusterRoleBinding",
-
-              "metadata": {
-
-              "name": "oidc-cluster-admin"
-
-              },
-
-              "roleRef": {
-
-              "apiGroup": "rbac.authorization.k8s.io",
-
-              "kind": "ClusterRole",
-
-              "name": "cluster-admin"
-
-              },
-
-              "subjects": [
-
-              {
-
-              "kind": "Group",
-
-              "name": "admin"
-
-              }
-
-              ]
-
-              }'
-          command:
-            - sh
-          env:
-            - name: HOME
-              value: /export
-            - name: VCLUSTER_SERVER_URL
-              value: https://oidc:443
-          image: docker.io/bitnami/kubectl:1.24.3
-          imagePullPolicy: IfNotPresent
-          name: oidc-apply-manifests
-          ports: []
-          stdin: false
-          tty: false
-          volumeMounts:
-            - mountPath: /export
-              name: export
-            - mountPath: /etc/vcluster-kubeconfig
-              name: kubeconfig
-              readOnly: true
-          workingDir: /export
-      imagePullSecrets: []
-      initContainers: []
-      restartPolicy: OnFailure
-      terminationGracePeriodSeconds: 30
-      volumes:
-        - emptyDir: {}
-          name: export
-        - name: kubeconfig
-          secret:
-            secretName: vc-oidc-kubeconfig
 ---
 apiVersion: batch/v1
 kind: Job
