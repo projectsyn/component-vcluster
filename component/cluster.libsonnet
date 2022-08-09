@@ -156,6 +156,24 @@ local cluster = function(name, options)
     },
   };
 
+  local initManifestsCM = kube.ConfigMap(name + '-init-manifests') {
+    local manifests = options.additional_manifests,
+    local manifestArray = if std.isArray(manifests) then
+      manifests
+    else if std.isObject(manifests) then
+      std.objectValues(manifests)
+    else
+      error 'Manifests must be array or object'
+    ,
+
+    metadata+: {
+      namespace: options.namespace,
+    },
+    data: {
+      manifests: std.manifestYamlStream(manifestArray, false, false),
+    },
+  };
+
   local statefulSet = kube.StatefulSet(name) {
     metadata+: {
       namespace: options.namespace,
@@ -199,12 +217,24 @@ local cluster = function(name, options)
           affinity: {},
           tolerations: [],
           serviceAccountName: 'vc-' + name,
-          volumes: if !options.storage.persistence then [
+          volumes: [
+            {
+              name: 'coredns',
+              configMap: {
+                name: 'vc-%s-coredns' % name,
+                defaultMode: 420,
+              },
+            },
+            {
+              name: 'etc-rancher',
+              emptyDir: {},
+            },
+          ] + if !options.storage.persistence then [
             {
               name: 'data',
               emptyDir: {},
             },
-          ],
+          ] else [],
           local tlsSANs = [
             '--tls-san=%s.%s.svc.cluster.local' % [ name, options.namespace ],
             '--tls-san=%s.%s.svc' % [ name, options.namespace ],
@@ -247,6 +277,10 @@ local cluster = function(name, options)
                 {
                   mountPath: '/data',
                   name: 'data',
+                },
+                {
+                  mountPath: '/etc/rancher',
+                  name: 'etc-rancher',
                 },
               ],
               resources: {
@@ -293,6 +327,11 @@ local cluster = function(name, options)
                 {
                   mountPath: '/data',
                   name: 'data',
+                  readOnly: true,
+                },
+                {
+                  mountPath: '/manifests/coredns',
+                  name: 'coredns',
                   readOnly: true,
                 },
               ],
@@ -358,8 +397,9 @@ local cluster = function(name, options)
     service,
     headlessService,
     statefulSet,
+    initManifestsCM,
+    (import 'coredns.libsonnet').corednsConfigMap(name, options.namespace),
     if options.ingress.host != null then ingress,
-    if std.length(options.additional_manifests) > 0 then postSetup.ApplyManifests(name, 'vc-%s-kubeconfig' % name, options.additional_manifests),
     if options.syn.registration_url != null then postSetup.Synthesize(name, 'vc-%s-kubeconfig' % name, options.syn.registration_url),
   ] + if options.ocp_route.host != null then ocpRoute.RouteCreateJob(name, 'vc-%s-kubeconfig' % name, options.ocp_route.host) else []);
 
