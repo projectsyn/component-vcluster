@@ -393,7 +393,7 @@ spec:
               value: /export
             - name: VCLUSTER_SERVER_URL
               value: https://oidc:443
-          image: docker.io/bitnami/kubectl:1.24.4
+          image: docker.io/bitnami/kubectl:1.25.0
           imagePullPolicy: IfNotPresent
           name: oidc-synthesize
           ports: []
