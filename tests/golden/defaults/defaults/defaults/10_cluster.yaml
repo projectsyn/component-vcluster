@@ -191,6 +191,7 @@ spec:
         - args:
             - --name=defaults
             - --out-kube-config-secret=vc-defaults-kubeconfig
+            - --sync=ingresses
             - --tls-san=defaults.syn-defaults.svc.cluster.local
             - --tls-san=defaults.syn-defaults.svc
             - --tls-san=defaults.syn-defaults

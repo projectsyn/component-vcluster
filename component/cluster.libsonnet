@@ -312,6 +312,7 @@ local cluster = function(name, options)
               args: [
                 '--name=' + name,
                 '--out-kube-config-secret=vc-%s-kubeconfig' % name,
+                '--sync=ingresses',
               ] + tlsSANs + options.syncer.additional_args,
               livenessProbe: {
                 httpGet: {

@@ -195,6 +195,7 @@ spec:
         - args:
             - --name=oidc
             - --out-kube-config-secret=vc-oidc-kubeconfig
+            - --sync=ingresses
             - --tls-san=oidc.testns.svc.cluster.local
             - --tls-san=oidc.testns.svc
             - --tls-san=oidc.testns

@@ -197,6 +197,7 @@ spec:
         - args:
             - --name=openshift
             - --out-kube-config-secret=vc-openshift-kubeconfig
+            - --sync=ingresses
             - --tls-san=openshift.syn-openshift.svc.cluster.local
             - --tls-san=openshift.syn-openshift.svc
             - --tls-san=openshift.syn-openshift
