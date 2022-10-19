@@ -165,7 +165,7 @@ spec:
           command:
             - /bin/k3s
           env: []
-          image: docker.io/rancher/k3s:v1.24.3-k3s1
+          image: docker.io/rancher/k3s:v1.25.2-k3s1
           name: vcluster
           resources:
             limits:
@@ -188,7 +188,7 @@ spec:
             - --tls-san=defaults.syn-defaults
             - --tls-san=defaults
           env: []
-          image: docker.io/loftsh/vcluster:0.11.0
+          image: docker.io/loftsh/vcluster:0.12.2
           livenessProbe:
             failureThreshold: 10
             httpGet:

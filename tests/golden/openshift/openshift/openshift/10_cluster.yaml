@@ -171,7 +171,7 @@ spec:
           command:
             - /bin/k3s
           env: []
-          image: docker.io/rancher/k3s:v1.24.3-k3s1
+          image: docker.io/rancher/k3s:v1.25.2-k3s1
           name: vcluster
           resources:
             limits:
@@ -194,7 +194,7 @@ spec:
             - --tls-san=openshift.syn-openshift
             - --tls-san=openshift
           env: []
-          image: docker.io/loftsh/vcluster:0.11.0
+          image: docker.io/loftsh/vcluster:0.12.2
           livenessProbe:
             failureThreshold: 10
             httpGet:
@@ -491,7 +491,7 @@ spec:
               value: syn-openshift
             - name: VCLUSTER_STS_NAME
               value: openshift
-          image: docker.io/bitnami/kubectl:1.24.4
+          image: docker.io/bitnami/kubectl:1.25.3
           imagePullPolicy: IfNotPresent
           name: openshift
           ports: []

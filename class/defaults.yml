@@ -10,15 +10,15 @@ parameters:
       k3s:
         registry: docker.io
         image: rancher/k3s
-        tag: v1.24.3-k3s1
+        tag: v1.25.2-k3s1
       syncer:
         registry: docker.io
         image: loftsh/vcluster
-        tag: "0.11.0"
+        tag: "0.12.2"
       kubectl:
         registry: docker.io
         image: bitnami/kubectl
-        tag: "1.24.4"
+        tag: "1.25.3"
 
     storage:
       persistence: true
