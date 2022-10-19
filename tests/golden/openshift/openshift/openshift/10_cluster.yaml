@@ -194,7 +194,7 @@ spec:
             - --tls-san=openshift.syn-openshift
             - --tls-san=openshift
           env: []
-          image: docker.io/loftsh/vcluster:0.11.0
+          image: docker.io/loftsh/vcluster:0.12.2
           livenessProbe:
             failureThreshold: 10
             httpGet:
