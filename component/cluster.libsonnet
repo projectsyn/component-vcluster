@@ -78,6 +78,19 @@ local cluster = function(name, options)
       },
       {
         apiGroups: [
+          'networking.k8s.io',
+        ],
+        resources: [
+          'ingressclasses',
+        ],
+        verbs: [
+          'get',
+          'list',
+          'watch',
+        ],
+      },
+      {
+        apiGroups: [
           'apps',
         ],
         resources: [
@@ -299,6 +312,7 @@ local cluster = function(name, options)
               args: [
                 '--name=' + name,
                 '--out-kube-config-secret=vc-%s-kubeconfig' % name,
+                '--sync=ingresses',
               ] + tlsSANs + options.syncer.additional_args,
               livenessProbe: {
                 httpGet: {
