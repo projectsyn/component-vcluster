@@ -78,6 +78,19 @@ local cluster = function(name, options)
       },
       {
         apiGroups: [
+          'networking.k8s.io',
+        ],
+        resources: [
+          'ingressclasses',
+        ],
+        verbs: [
+          'get',
+          'list',
+          'watch',
+        ],
+      },
+      {
+        apiGroups: [
           'apps',
         ],
         resources: [
