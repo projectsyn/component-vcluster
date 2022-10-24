@@ -345,7 +345,17 @@ local cluster = function(name, options)
               securityContext: {
                 allowPrivilegeEscalation: false,
               },
-              env: [],
+              env: [
+                // ensure that syncer TLS certificate is also valid for pod IP
+                {
+                  name: 'POD_IP',
+                  valueFrom: {
+                    fieldRef: {
+                      fieldPath: 'status.podIP',
+                    },
+                  },
+                },
+              ],
               volumeMounts: [
                 {
                   mountPath: '/data',
