@@ -225,7 +225,11 @@ spec:
             - --tls-san=oidc.testns.svc
             - --tls-san=oidc.testns
             - --tls-san=oidc
-          env: []
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           image: docker.io/loftsh/vcluster:0.12.2
           livenessProbe:
             failureThreshold: 10

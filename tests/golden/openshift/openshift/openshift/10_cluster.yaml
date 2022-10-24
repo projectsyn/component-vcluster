@@ -227,7 +227,11 @@ spec:
             - --tls-san=openshift.syn-openshift.svc
             - --tls-san=openshift.syn-openshift
             - --tls-san=openshift
-          env: []
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           image: docker.io/loftsh/vcluster:0.12.2
           livenessProbe:
             failureThreshold: 10
