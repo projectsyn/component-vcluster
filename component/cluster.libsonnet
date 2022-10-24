@@ -78,19 +78,6 @@ local cluster = function(name, options)
       },
       {
         apiGroups: [
-          'networking.k8s.io',
-        ],
-        resources: [
-          'ingressclasses',
-        ],
-        verbs: [
-          'get',
-          'list',
-          'watch',
-        ],
-      },
-      {
-        apiGroups: [
           'apps',
         ],
         resources: [
@@ -125,6 +112,28 @@ local cluster = function(name, options)
     },
     subjects_: [ sa ],
     roleRef_: role,
+  };
+
+  local clusterRole = kube.ClusterRole('syn-vcluster-%s' % [ name ]) {
+    rules: [
+      {
+        apiGroups: [
+          'networking.k8s.io',
+        ],
+        resources: [
+          'ingressclasses',
+        ],
+        verbs: [
+          'get',
+          'list',
+          'watch',
+        ],
+      },
+    ],
+  };
+  local clusterRoleBinding = kube.ClusterRoleBinding('syn-vcluster-%s' % [ name ]) {
+    subjects_: [ sa ],
+    roleRef_: clusterRole,
   };
 
   local service = kube.Service(name) {
@@ -408,6 +417,8 @@ local cluster = function(name, options)
     sa,
     role,
     roleBinding,
+    clusterRole,
+    clusterRoleBinding,
     service,
     headlessService,
     statefulSet,

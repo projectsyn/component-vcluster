@@ -58,14 +58,6 @@ rules:
       - list
       - watch
   - apiGroups:
-      - networking.k8s.io
-    resources:
-      - ingressclasses
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
       - apps
     resources:
       - statefulsets
@@ -88,6 +80,39 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: defaults
+subjects:
+  - kind: ServiceAccount
+    name: vc-defaults
+    namespace: syn-defaults
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations: {}
+  labels:
+    name: syn-vcluster-defaults
+  name: syn-vcluster-defaults
+rules:
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: syn-vcluster-defaults
+  name: syn-vcluster-defaults
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: syn-vcluster-defaults
 subjects:
   - kind: ServiceAccount
     name: vc-defaults
