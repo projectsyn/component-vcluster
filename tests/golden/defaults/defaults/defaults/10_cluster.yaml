@@ -198,7 +198,7 @@ spec:
           command:
             - /bin/k3s
           env: []
-          image: docker.io/rancher/k3s:v1.25.2-k3s1
+          image: docker.io/rancher/k3s:v1.25.3-k3s1
           name: vcluster
           resources:
             limits:
