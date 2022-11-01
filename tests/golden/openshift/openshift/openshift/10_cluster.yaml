@@ -232,7 +232,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-          image: docker.io/loftsh/vcluster:0.12.2
+          image: docker.io/loftsh/vcluster:0.12.3
           livenessProbe:
             failureThreshold: 10
             httpGet:
