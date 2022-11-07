@@ -14,7 +14,7 @@ parameters:
       syncer:
         registry: docker.io
         image: loftsh/vcluster
-        tag: "0.12.2"
+        tag: "0.12.3"
       kubectl:
         registry: docker.io
         image: bitnami/kubectl
