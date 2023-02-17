@@ -3,6 +3,9 @@ parameters:
     host_service_cidr: 172.30.0.0/16
     ocp_route:
       host: test.apps.local
+    namespaceMetadata:
+      annotations:
+        openshift.io/cluster-monitoring: "true"
 
   facts:
     distribution: openshift4

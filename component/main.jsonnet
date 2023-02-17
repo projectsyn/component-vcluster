@@ -10,6 +10,8 @@ local instance = inv.parameters._instance;
 
 // Define outputs below
 {
-  '00_namespace': kube.Namespace(params.namespace),
+  '00_namespace': kube.Namespace(params.namespace) {
+    metadata+: com.makeMergeable(params.namespaceMetadata),
+  },
   '10_cluster': cluster.Cluster(instance, params),
 }

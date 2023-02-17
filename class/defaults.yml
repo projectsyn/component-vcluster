@@ -3,6 +3,7 @@ parameters:
     =_metadata:
       multi_instance: true
     namespace: syn-${_instance}
+    namespaceMetadata: {}
 
     host_service_cidr: null
 
