@@ -14,6 +14,24 @@ The namespace in which to deploy this component.
 
 Deploying multiple vclusters in the same namespace isn't supported.
 
+
+== `namespaceMetadata`
+
+[horizontal]
+type:: dictionary
+default:: `{}`
+example::
++
+[source,yaml]
+----
+namespace:
+  annotations:
+    prometheus: infra
+----
+
+Additional metadata for the namespace.
+
+
 == `host_service_cidr`
 
 [horizontal]
