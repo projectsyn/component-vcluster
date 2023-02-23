@@ -125,6 +125,32 @@ default:: `null`
 The `StorageClass` used for the persistent volume claim.
 
 
+== `resources`
+
+[horizontal]
+type:: string
+default::
++
+[source,yaml]
+----
+resources:
+  k3s:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      memory: 2Gi
+  syncer:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 1Gi
+----
+
+The resource requests and limits for the k3s and syncer containers.
+
+
 == `ingress.host`
 
 [horizontal]
