@@ -305,15 +305,7 @@ local cluster = function(name, options)
                   name: 'etc-rancher',
                 },
               ],
-              resources: {
-                limits: {
-                  memory: '2Gi',
-                },
-                requests: {
-                  cpu: '200m',
-                  memory: '256Mi',
-                },
-              },
+              resources: params.resources.k3s,
             },
             {
               name: 'syncer',
@@ -368,15 +360,7 @@ local cluster = function(name, options)
                   readOnly: true,
                 },
               ],
-              resources: {
-                limits: {
-                  memory: '1Gi',
-                },
-                requests: {
-                  cpu: '100m',
-                  memory: '128Mi',
-                },
-              },
+              resources: params.resources.syncer,
             },
           ],
         },

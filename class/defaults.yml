@@ -26,6 +26,20 @@ parameters:
       size: 5Gi
       class_name: null
 
+    resources:
+      k3s:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          memory: 2Gi
+      syncer:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          memory: 1Gi
+
     ingress:
       host: null
       labels: {}
