@@ -288,10 +288,9 @@ spec:
 ---
 apiVersion: v1
 data:
-  manifests: '---
+  manifests: |+
+    ---
 
-
-    '
 kind: ConfigMap
 metadata:
   annotations: {}
@@ -302,70 +301,220 @@ metadata:
 ---
 apiVersion: v1
 data:
-  coredns.yaml: "apiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: coredns\n\
-    \  namespace: kube-system\n---\napiVersion: rbac.authorization.k8s.io/v1\nkind:\
-    \ ClusterRole\nmetadata:\n  labels:\n    kubernetes.io/bootstrapping: rbac-defaults\n\
-    \  name: system:coredns\nrules:\n  - apiGroups:\n      - \"\"\n    resources:\n\
-    \      - endpoints\n      - services\n      - pods\n      - namespaces\n    verbs:\n\
-    \      - list\n      - watch\n  - apiGroups:\n      - discovery.k8s.io\n    resources:\n\
-    \      - endpointslices\n    verbs:\n      - list\n      - watch\n---\napiVersion:\
-    \ rbac.authorization.k8s.io/v1\nkind: ClusterRoleBinding\nmetadata:\n  annotations:\n\
-    \    rbac.authorization.kubernetes.io/autoupdate: \"true\"\n  labels:\n    kubernetes.io/bootstrapping:\
-    \ rbac-defaults\n  name: system:coredns\nroleRef:\n  apiGroup: rbac.authorization.k8s.io\n\
-    \  kind: ClusterRole\n  name: system:coredns\nsubjects:\n  - kind: ServiceAccount\n\
-    \    name: coredns\n    namespace: kube-system\n---\napiVersion: v1\nkind: ConfigMap\n\
-    metadata:\n  name: coredns\n  namespace: kube-system\ndata:\n  Corefile: |\n \
-    \   .:1053 {\n        {{.LOG_IN_DEBUG}}\n        errors\n        health\n    \
-    \    ready\n        kubernetes cluster.local in-addr.arpa ip6.arpa {\n       \
-    \   pods insecure\n          fallthrough in-addr.arpa ip6.arpa\n        }\n  \
-    \      hosts /etc/coredns/NodeHosts {\n          ttl 60\n          reload 15s\n\
-    \          fallthrough\n        }\n        prometheus :9153\n        forward .\
-    \ /etc/resolv.conf\n        cache 30\n        loop\n        reload\n        loadbalance\n\
-    \    }\n\n    import /etc/coredns/custom/*.server\n  NodeHosts: \"\"\n---\napiVersion:\
-    \ apps/v1\nkind: Deployment\nmetadata:\n  name: coredns\n  namespace: kube-system\n\
-    \  labels:\n    k8s-app: kube-dns\n    kubernetes.io/name: \"CoreDNS\"\nspec:\n\
-    \  replicas: 1\n  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n   \
-    \   maxUnavailable: 1\n  selector:\n    matchLabels:\n      k8s-app: kube-dns\n\
-    \  template:\n    metadata:\n      labels:\n        k8s-app: kube-dns\n    spec:\n\
-    \      priorityClassName: \"system-cluster-critical\"\n      serviceAccountName:\
-    \ coredns\n      nodeSelector:\n        kubernetes.io/os: linux\n      topologySpreadConstraints:\n\
-    \        - maxSkew: 1\n          topologyKey: kubernetes.io/hostname\n       \
-    \   whenUnsatisfiable: DoNotSchedule\n          labelSelector:\n            matchLabels:\n\
-    \              k8s-app: kube-dns\n      containers:\n        - name: coredns\n\
-    \          image: {{.IMAGE}}\n          imagePullPolicy: IfNotPresent\n      \
-    \    resources:\n            limits:\n              cpu: 1000m\n             \
-    \ memory: 170Mi\n            requests:\n              cpu: 100m\n            \
-    \  memory: 70Mi\n          args: [ \"-conf\", \"/etc/coredns/Corefile\" ]\n  \
-    \        volumeMounts:\n            - name: config-volume\n              mountPath:\
-    \ /etc/coredns\n              readOnly: true\n            - name: custom-config-volume\n\
-    \              mountPath: /etc/coredns/custom\n              readOnly: true\n\
-    \          ports:\n            - containerPort: 1053\n              name: dns\n\
-    \              protocol: UDP\n            - containerPort: 1053\n            \
-    \  name: dns-tcp\n              protocol: TCP\n            - containerPort: 9153\n\
-    \              name: metrics\n              protocol: TCP\n          securityContext:\n\
-    \            runAsUser: {{.RUN_AS_USER}}\n            runAsNonRoot: {{.RUN_AS_NON_ROOT}}\n\
-    \            allowPrivilegeEscalation: false\n            capabilities:\n    \
-    \          drop:\n                - ALL\n            readOnlyRootFilesystem: true\n\
-    \          livenessProbe:\n            httpGet:\n              path: /health\n\
-    \              port: 8080\n              scheme: HTTP\n            initialDelaySeconds:\
-    \ 60\n            periodSeconds: 10\n            timeoutSeconds: 1\n         \
-    \   successThreshold: 1\n            failureThreshold: 3\n          readinessProbe:\n\
-    \            httpGet:\n              path: /ready\n              port: 8181\n\
-    \              scheme: HTTP\n            initialDelaySeconds: 0\n            periodSeconds:\
-    \ 2\n            timeoutSeconds: 1\n            successThreshold: 1\n        \
-    \    failureThreshold: 3\n      dnsPolicy: Default\n      volumes:\n        -\
-    \ name: config-volume\n          configMap:\n            name: coredns\n     \
-    \       items:\n              - key: Corefile\n                path: Corefile\n\
-    \              - key: NodeHosts\n                path: NodeHosts\n        - name:\
-    \ custom-config-volume\n          configMap:\n            name: coredns-custom\n\
-    \            optional: true\n---\napiVersion: v1\nkind: Service\nmetadata:\n \
-    \ name: kube-dns\n  namespace: kube-system\n  annotations:\n    prometheus.io/port:\
-    \ \"9153\"\n    prometheus.io/scrape: \"true\"\n  labels:\n    k8s-app: kube-dns\n\
-    \    kubernetes.io/cluster-service: \"true\"\n    kubernetes.io/name: \"CoreDNS\"\
-    \nspec:\n  selector:\n    k8s-app: kube-dns\n  type: ClusterIP\n  ports:\n   \
-    \ - name: dns\n      port: 53\n      targetPort: 1053\n      protocol: UDP\n \
-    \   - name: dns-tcp\n      port: 53\n      targetPort: 1053\n      protocol: TCP\n\
-    \    - name: metrics\n      port: 9153\n      protocol: TCP\n"
+  coredns.yaml: |
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: coredns
+      namespace: kube-system
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      labels:
+        kubernetes.io/bootstrapping: rbac-defaults
+      name: system:coredns
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - endpoints
+          - services
+          - pods
+          - namespaces
+        verbs:
+          - list
+          - watch
+      - apiGroups:
+          - discovery.k8s.io
+        resources:
+          - endpointslices
+        verbs:
+          - list
+          - watch
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      annotations:
+        rbac.authorization.kubernetes.io/autoupdate: "true"
+      labels:
+        kubernetes.io/bootstrapping: rbac-defaults
+      name: system:coredns
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: system:coredns
+    subjects:
+      - kind: ServiceAccount
+        name: coredns
+        namespace: kube-system
+    ---
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: coredns
+      namespace: kube-system
+    data:
+      Corefile: |
+        .:1053 {
+            {{.LOG_IN_DEBUG}}
+            errors
+            health
+            ready
+            kubernetes cluster.local in-addr.arpa ip6.arpa {
+              pods insecure
+              fallthrough in-addr.arpa ip6.arpa
+            }
+            hosts /etc/coredns/NodeHosts {
+              ttl 60
+              reload 15s
+              fallthrough
+            }
+            prometheus :9153
+            forward . /etc/resolv.conf
+            cache 30
+            loop
+            reload
+            loadbalance
+        }
+
+        import /etc/coredns/custom/*.server
+      NodeHosts: ""
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: coredns
+      namespace: kube-system
+      labels:
+        k8s-app: kube-dns
+        kubernetes.io/name: "CoreDNS"
+    spec:
+      replicas: 1
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+      selector:
+        matchLabels:
+          k8s-app: kube-dns
+      template:
+        metadata:
+          labels:
+            k8s-app: kube-dns
+        spec:
+          priorityClassName: "system-cluster-critical"
+          serviceAccountName: coredns
+          nodeSelector:
+            kubernetes.io/os: linux
+          topologySpreadConstraints:
+            - maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  k8s-app: kube-dns
+          containers:
+            - name: coredns
+              image: {{.IMAGE}}
+              imagePullPolicy: IfNotPresent
+              resources:
+                limits:
+                  cpu: 1000m
+                  memory: 170Mi
+                requests:
+                  cpu: 100m
+                  memory: 70Mi
+              args: [ "-conf", "/etc/coredns/Corefile" ]
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/coredns
+                  readOnly: true
+                - name: custom-config-volume
+                  mountPath: /etc/coredns/custom
+                  readOnly: true
+              ports:
+                - containerPort: 1053
+                  name: dns
+                  protocol: UDP
+                - containerPort: 1053
+                  name: dns-tcp
+                  protocol: TCP
+                - containerPort: 9153
+                  name: metrics
+                  protocol: TCP
+              securityContext:
+                runAsUser: {{.RUN_AS_USER}}
+                runAsNonRoot: {{.RUN_AS_NON_ROOT}}
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+              livenessProbe:
+                httpGet:
+                  path: /health
+                  port: 8080
+                  scheme: HTTP
+                initialDelaySeconds: 60
+                periodSeconds: 10
+                timeoutSeconds: 1
+                successThreshold: 1
+                failureThreshold: 3
+              readinessProbe:
+                httpGet:
+                  path: /ready
+                  port: 8181
+                  scheme: HTTP
+                initialDelaySeconds: 0
+                periodSeconds: 2
+                timeoutSeconds: 1
+                successThreshold: 1
+                failureThreshold: 3
+          dnsPolicy: Default
+          volumes:
+            - name: config-volume
+              configMap:
+                name: coredns
+                items:
+                  - key: Corefile
+                    path: Corefile
+                  - key: NodeHosts
+                    path: NodeHosts
+            - name: custom-config-volume
+              configMap:
+                name: coredns-custom
+                optional: true
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: kube-dns
+      namespace: kube-system
+      annotations:
+        prometheus.io/port: "9153"
+        prometheus.io/scrape: "true"
+      labels:
+        k8s-app: kube-dns
+        kubernetes.io/cluster-service: "true"
+        kubernetes.io/name: "CoreDNS"
+    spec:
+      selector:
+        k8s-app: kube-dns
+      type: ClusterIP
+      ports:
+        - name: dns
+          port: 53
+          targetPort: 1053
+          protocol: UDP
+        - name: dns-tcp
+          port: 53
+          targetPort: 1053
+          protocol: TCP
+        - name: metrics
+          port: 9153
+          protocol: TCP
 kind: ConfigMap
 metadata:
   annotations: {}
@@ -446,80 +595,67 @@ spec:
         - args:
             - -eu
             - -c
-            - "#!/bin/sh\nset -eu\n\nvcluster_kubeconfig=/etc/vcluster-kubeconfig/config\n\
-              \necho \"Using kubeconfig: $vcluster_kubeconfig\"\n\ncert=$(kubectl\
-              \ --kubeconfig $vcluster_kubeconfig config view '-o=template={{(index\
-              \ (index .clusters 0).cluster \"certificate-authority-data\") | base64decode}}'\
-              \ --raw)\n\necho \"Found certificate:\\n$cert\"\n\necho \"Looking for\
-              \ StatefulSet.apps/${VCLUSTER_STS_NAME}...\"\n\nowner=$(kubectl get\
-              \ StatefulSet.apps \"$VCLUSTER_STS_NAME\" -ojson | jq '{kind: .kind,\
-              \ apiVersion: .apiVersion, name: .metadata.name, uid: .metadata.uid}')\n\
-              \necho \"Found StatefulSet as owner: $owner\"\n\necho \"Applying route...\"\
-              \n\nprintf \"$1\" \\\n    | jq \\\n        --arg     cert  \"$cert\"\
-              \ \\\n        --argjson owner \"$owner\" \\\n        '.metadata.ownerReferences\
-              \ = [$owner] | .spec.tls.destinationCACertificate = $cert' \\\n    |\
-              \ kubectl apply -f - -oyaml\n\necho \"Done!\"\n"
+            - |
+              #!/bin/sh
+              set -eu
+
+              vcluster_kubeconfig=/etc/vcluster-kubeconfig/config
+
+              echo "Using kubeconfig: $vcluster_kubeconfig"
+
+              cert=$(kubectl --kubeconfig $vcluster_kubeconfig config view '-o=template={{(index (index .clusters 0).cluster "certificate-authority-data") | base64decode}}' --raw)
+
+              echo "Found certificate:\n$cert"
+
+              echo "Looking for StatefulSet.apps/${VCLUSTER_STS_NAME}..."
+
+              owner=$(kubectl get StatefulSet.apps "$VCLUSTER_STS_NAME" -ojson | jq '{kind: .kind, apiVersion: .apiVersion, name: .metadata.name, uid: .metadata.uid}')
+
+              echo "Found StatefulSet as owner: $owner"
+
+              echo "Applying route..."
+
+              printf "$1" \
+                  | jq \
+                      --arg     cert  "$cert" \
+                      --argjson owner "$owner" \
+                      '.metadata.ownerReferences = [$owner] | .spec.tls.destinationCACertificate = $cert' \
+                  | kubectl apply -f - -oyaml
+
+              echo "Done!"
             - --
-            - '{
-
+            - |-
+              {
               "apiVersion": "route.openshift.io/v1",
-
               "kind": "Route",
-
               "metadata": {
-
               "annotations": {
 
-
               },
-
               "labels": {
-
               "name": "openshift"
-
               },
-
               "name": "openshift",
-
               "namespace": "syn-openshift"
-
               },
-
               "spec": {
-
               "host": "test.apps.local",
-
               "path": "/",
-
               "port": {
-
               "targetPort": "https"
-
               },
-
               "tls": {
-
               "insecureEdgeTerminationPolicy": "None",
-
               "termination": "reencrypt"
-
               },
-
               "to": {
-
               "kind": "Service",
-
               "name": "openshift",
-
               "weight": 100
-
               },
-
               "wildcardPolicy": "None"
-
               }
-
-              }'
+              }
           command:
             - sh
           env:
@@ -529,7 +665,7 @@ spec:
               value: syn-openshift
             - name: VCLUSTER_STS_NAME
               value: openshift
-          image: docker.io/bitnami/kubectl:1.26.1
+          image: docker.io/bitnami/kubectl:1.26.3
           imagePullPolicy: IfNotPresent
           name: openshift
           ports: []
