@@ -665,7 +665,7 @@ spec:
               value: syn-openshift
             - name: VCLUSTER_STS_NAME
               value: openshift
-          image: docker.io/bitnami/kubectl:1.26.3
+          image: docker.io/bitnami/kubectl:1.26.11
           imagePullPolicy: IfNotPresent
           name: openshift
           ports: []
