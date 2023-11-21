@@ -136,6 +136,46 @@ local cluster = function(name, options)
     roleRef_: clusterRole,
   };
 
+  local sccRole = if isOpenshift then
+    kube.Role('use-nonroot-v2') {
+      metadata+: {
+        namespace: options.namespace,
+      },
+      rules: [
+        {
+          apiGroups: [
+            'security.openshift.io',
+          ],
+          resourceNames: [
+            'nonroot-v2',
+          ],
+          resources: [
+            'securitycontextconstraints',
+          ],
+          verbs: [
+            'use',
+          ],
+        },
+      ],
+    };
+  local sccRoleBinding = if isOpenshift then
+    kube.RoleBinding('default-use-nonroot-v2') {
+      metadata+: {
+        annotations+: {
+          'vcluster.syn.tools/description': 'Allow vcluster to sync pods with arbitrary nonroot users by allowing the default ServiceAccount to use the nonroot-v2 scc',
+        },
+        namespace: options.namespace,
+      },
+      roleRef_: sccRole,
+      subjects: [
+        {
+          kind: 'ServiceAccount',
+          name: 'default',
+          namespace: options.namespace,
+        },
+      ],
+    };
+
   local service = kube.Service(name) {
     metadata+: {
       namespace: options.namespace,
@@ -413,6 +453,8 @@ local cluster = function(name, options)
     roleBinding,
     clusterRole,
     clusterRoleBinding,
+    sccRole,
+    sccRoleBinding,
     service,
     headlessService,
     statefulSet,
