@@ -2,6 +2,7 @@ parameters:
   vcluster:
     =_metadata:
       multi_instance: true
+      multi_tenant: true
     namespace: syn-${_instance}
     namespaceMetadata: {}
 
