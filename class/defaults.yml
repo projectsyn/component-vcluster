@@ -12,7 +12,7 @@ parameters:
       k3s:
         registry: docker.io
         image: rancher/k3s
-        tag: v1.25.15-k3s1
+        tag: v1.32.0-k3s1
       syncer:
         registry: docker.io
         image: loftsh/vcluster
