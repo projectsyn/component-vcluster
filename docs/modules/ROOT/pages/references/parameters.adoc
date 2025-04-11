@@ -32,29 +32,6 @@ namespace:
 Additional metadata for the namespace.
 
 
-== `host_service_cidr`
-
-[horizontal]
-type:: string
-default:: `null`
-
-The host cluster's service CIDR. Must be set.
-
-You can find out a host cluster's service CIDR by deploying a service with an invalid ClusterIP (such as 1.1.1.1).
-
-[source,shell]
-----
-kubectl create svc clusterip check-service-cidr --clusterip=1.1.1.1 --tcp=5678:5678
-----
-
-The error message shows the host cluster's service CIDR:
-
-[source]
-----
-The Service "check-service-cidr" is invalid: spec.clusterIPs: Invalid value: []string{"1.1.1.1"}.... The range of valid IPs is 10.96.0.0/12.
-----
-
-
 == `images`
 
 [horizontal]
@@ -63,11 +40,6 @@ type:: dictionary
 Dictionary containing the container images used by this component.
 
 The `kubectl` image is used to create OCP routes. The `kubectl` and `jq` binaries are required in this image.
-
-[NOTE]
-The deprecated parameter `repository` is still supported for backwards compatibility.
-Use `registry` instead.
-`repository` overrides the `registry` parameter if both are set.
 
 == `k3s.additional_args`
 
@@ -80,50 +52,21 @@ example::
 ----
 k3s:
   additional_args:
-    - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
-    - --kube-apiserver-arg=oidc-client-id=local
-    - --kube-apiserver-arg=oidc-username-claim=email
-    - --kube-apiserver-arg=oidc-groups-claim=groups
+  - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
+  - --kube-apiserver-arg=oidc-client-id=local
+  - --kube-apiserver-arg=oidc-username-claim=email
+  - --kube-apiserver-arg=oidc-groups-claim=groups
 ----
 
 Additional arguments for the k3s cluster.
 
 
-== `syncer.additional_args`
+== `backing_store`
 
 [horizontal]
-type:: list
-default:: `[]`
+type:: dictionary
 
-Additional arguments for vcluster syncer.
-
-
-== `storage.persistence`
-
-[horizontal]
-type:: boolean
-default:: `true`
-
-Persistence controls whether vcluster resources are persisted between deployments.
-
-
-== `storage.size`
-
-[horizontal]
-type:: string
-default:: `5Gi`
-
-The size of the persistent volume claim.
-
-
-== `storage.class_name`
-
-[horizontal]
-type:: string
-default:: `null`
-
-The `StorageClass` used for the persistent volume claim.
-
+Configuration for the backing store. If nothing configured it uses embedded database (sqlite). For configuration options see https://www.vcluster.com/docs/vcluster/configure/vcluster-yaml/control-plane/components/backing-store/[the offical documentation]
 
 == `resources`
 
@@ -136,16 +79,17 @@ default::
 resources:
   k3s:
     requests:
+      cpu: 40m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+  syncer:
+    requests:
       cpu: 200m
       memory: 256Mi
     limits:
       memory: 2Gi
-  syncer:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      memory: 1Gi
 ----
 
 The resource requests and limits for the k3s and syncer containers.
@@ -183,15 +127,6 @@ ingress:
 Additional annotations for the ingress object.
 
 
-== `ingress.labels`
-
-[horizontal]
-type:: dict
-default:: `{}`
-
-Additional labels for the ingress object.
-
-
 == `ocp_route.host`
 
 [horizontal]
@@ -205,7 +140,6 @@ The route is set with TLS termination set to re-encrypt.
 The re-encyption breaks the mTLS user authentication.
 A secondary authentication method, like OIDC, should be configured.
 
-
 == `syn.registration_url`
 
 [horizontal]
@@ -215,17 +149,42 @@ example:: `https://api.syn.example.com/install/steward.json?token=cHJvamVjdCBzeW
 
 If set, the vcluster is registered with a Project SYN instance.
 
+== `storage.persistence`
+
+[horizontal]
+type:: bool or string
+default:: `auto`
+
+Persistence controls whether vcluster resources are persisted between deployments. Defaults to auto, where vcluster will automatically determine based on the chosen distro and backing_store.
+
+
+== `storage.size`
+
+[horizontal]
+type:: string
+default:: `5Gi`
+
+The size of the persistent volume claim.
+
+
+== `storage.class_name`
+
+[horizontal]
+type:: string
+default:: `null`
+
+The `StorageClass` used for the persistent volume claim.
 
 == `additional_manifests`
 
 [horizontal]
-type:: dict
-default:: `{}`
+type:: string
+default:: `""`
 example::
 +
 [source,yaml]
 ----
-additional_manifests:
+additional_manifests: |-
   cluster-admin:
     kind: ClusterRoleBinding
     apiVersion: rbac.authorization.k8s.io/v1
@@ -242,14 +201,18 @@ additional_manifests:
 
 Manifests that should be applied to the vcluster after startup.
 
+== `helm_values`
+
+[horizontal]
+type:: dict
+
+You can override the default helm values here. The default configuration comes with k3s as well as ingress enabled. See defaults.yaml for the exact configuration.
+
 
 == Example
 
 [source,yaml]
 ----
-host_service_cidr: 172.30.0.0/16
-storage:
-  persistence: false
 ingress:
   host: testcluster.local
 k3s:
@@ -258,4 +221,8 @@ k3s:
     - --kube-apiserver-arg=oidc-client-id=local
     - --kube-apiserver-arg=oidc-username-claim=email
     - --kube-apiserver-arg=oidc-groups-claim=groups
+backing_store:
+  etcd:
+    deploy:
+      enabled: true
 ----

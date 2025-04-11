@@ -57,7 +57,7 @@ parameters:
         - --kube-apiserver-arg=oidc-client-id=$YOUR_CLIENT_ID <2>
         - --kube-apiserver-arg=oidc-username-claim=preferred_username
         - --kube-apiserver-arg=oidc-groups-claim=groups
-    additional_manifests: <3>
+    additional_manifests: |- <3>
       cluster-admin:
         kind: ClusterRoleBinding
         apiVersion: rbac.authorization.k8s.io/v1

@@ -25,22 +25,20 @@ At the end of this tutorial we will have:
 ----
 parameters:
   vcluster:
-    host_service_cidr: 172.30.0.0/16 <1>
     k3s:
       additional_args:
-        - --kube-apiserver-arg=oidc-issuer-url=https://keycloak.example.com/auth/realms/realm <2>
-        - --kube-apiserver-arg=oidc-client-id=client-id <3>
+        - --kube-apiserver-arg=oidc-issuer-url=https://keycloak.example.com/auth/realms/realm <1>
+        - --kube-apiserver-arg=oidc-client-id=client-id <2>
         - --kube-apiserver-arg=oidc-username-claim=preferred_username
         - --kube-apiserver-arg=oidc-groups-claim=groups
     ingress:
       host: vcluster.example.com
       annotations:
-        route.openshift.io/termination: reencrypt <4>
+        route.openshift.io/termination: reencrypt <3>
 ----
-<1> The host service CIDR (see xref:references/parameters.adoc#_host_service_cidr[host_service_cidr in parameters])
-<2> The Keycloak URL and realm
-<3> The client ID in Keycloak
-<4> Needed to communicate with the encrypted vcluster endpoint
+<1> The Keycloak URL and realm
+<2> The client ID in Keycloak
+<3> Needed to communicate with the encrypted vcluster endpoint
 
 . Compile and push cluster catalog
 +
@@ -57,34 +55,6 @@ This will create 2 OpenShift Route objects; one for the Ingress and one for the 
 ====
 You can inspect the certificate provisioning with `kubecl get certificate,order`.
 ====
-
-. Get CA certificate from Secret.
-+
-[source,bash]
-----
-INSTANCE_NAME=vcluster <1>
-NS=syn-${INSTANCE_NAME} <2>
-CA_CERT=$(kubectl -n ${NS} get secret vc-${INSTANCE_NAME}-kubeconfig -o jsonpath='{.data.certificate-authority}' | base64 --decode)
-----
-<1> The instance name
-<2> The target namespace in which vcluster is being installed
-
-. Patch generated Route.
-+
-[NOTE]
-====
-This step is necessary so that the OpenShift Router trusts the generated CA certificate of the vcluster.
-====
-+
-[source,bash]
-----
-route_name=$(kubectl -n ${NS} get route -o json | jq -r '.items[].metadata | select(.ownerReferences != null) | select(.ownerReferences[].name=="'${INSTANCE_NAME}'") | .name')
-patch_cert="$(echo ${CA_CERT} | sed 's/$/\\n/' | tr -d '\n')"
-patch_file=$(mktemp)
-echo -E '{"spec":{"tls":{"destinationCACertificate":"'$(echo -E ${patch_cert})'"}}}' > ${patch_file}
-kubectl -n ${NS} patch route ${route_name} --patch-file ${patch_file}
-rm ${patch_file}
-----
 
 == Configure Keycloak
 

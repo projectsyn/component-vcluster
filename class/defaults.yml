@@ -6,56 +6,115 @@ parameters:
     namespace: syn-${_instance}
     namespaceMetadata: {}
 
-    host_service_cidr: null
+    charts:
+      vcluster:
+        source: https://charts.loft.sh
+        version: 0.24.1
 
     images:
       k3s:
         registry: docker.io
         image: rancher/k3s
-        tag: v1.25.15-k3s1
+        tag: v1.32.1-k3s1
       syncer:
-        registry: docker.io
-        image: loftsh/vcluster
-        tag: "0.14.1"
+        registry: ghcr.io
+        image: loft-sh/vcluster-oss
+        tag: "0.24.1"
       kubectl:
         registry: docker.io
         image: bitnami/kubectl
-        tag: "1.28.15"
+        tag: "1.32.1"
 
     storage:
-      persistence: true
+      persistence: auto
       size: 5Gi
       class_name: null
 
+    k3s:
+      additional_args: []
+
+    ingress:
+      enabled: true
+      host: null
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-production
+
+    backing_store: {}
+
+    additional_manifests: nil
+
     resources:
       k3s:
+        requests:
+          cpu: 40m
+          memory: 64Mi
+        limits:
+          cpu: 100m
+          memory: 256Mi
+      syncer:
         requests:
           cpu: 200m
           memory: 256Mi
         limits:
           memory: 2Gi
-      syncer:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-        limits:
-          memory: 1Gi
 
-    ingress:
-      host: null
-      labels: {}
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-production
+    helm_values:
+      sync:
+        toHost:
+          ingresses:
+            enabled: true
+      controlPlane:
+        distro:
+          k3s:
+            enabled: true
+            extraArgs: ${vcluster:k3s:additional_args}
+            image:
+              registry: ${vcluster:images:k3s:registry}
+              repository: ${vcluster:images:k3s:image}
+              tag: ${vcluster:images:k3s:tag}
+            resources: ${vcluster:resources:k3s}
 
-    ocp_route:
-      host: null
-
-    k3s:
-      additional_args: []
-    syncer:
-      additional_args: []
-
-    additional_manifests: {}
-
+        statefulSet:
+          security:
+            containerSecurityContext:
+              allowPrivilegeEscalation: false
+              runAsUser: null
+              runAsGroup: null
+          resources:
+            ${vcluster:resources:syncer}
+          image:
+            registry: ${vcluster:images:syncer:registry}
+            repository: ${vcluster:images:syncer:image}
+            tag: ${vcluster:images:syncer:tag}
+          persistence:
+            volumeClaim:
+              enabled: ${vcluster:storage:persistence}
+              size: ${vcluster:storage:size}
+              storageClass: ${vcluster:storage:class_name}
+        backingStore: ${vcluster:backing_store}
+        ingress:
+          enabled: ${vcluster:ingress:enabled}
+          host: ${vcluster:ingress:host}
+          annotations: ${vcluster:ingress:annotations}
+          spec:
+            tls:
+              - hosts:
+                  - ${vcluster:ingress:host}
+                secretName: ${_instance}-tls
+      rbac:
+        role:
+          extraRules:
+            - apiGroups: [""]
+              resources: ["endpoints/restricted"]
+              verbs: ["create"]
+      exportKubeConfig:
+        server: https://${vcluster:ingress:host}
+        serviceAccount:
+          name: ${_instance}-admin
+          clusterRole: cluster-admin
+      experimental:
+        deploy:
+          vcluster:
+            manifests: ${vcluster:additional_manifests}
     syn:
       registration_url: null

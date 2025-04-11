@@ -1,14 +1,15 @@
 /*
-* Creates a re-encrypting OCP route.
+* Patches the OCP route.
 *
 * Routes do not support reading certificates from secrets. Thus
-* certificates have to be known before creating a route.
+* certificates have to be known before creating a route or patched
+* in afterwards. Since the route is automatically created from
+* the ingress, we will patch the route afterwards.
 * The clusters serving certificate is only known after startup.
 * So we create a job that:
 * - Mounts the vclusters kubeconfig
 * - Reads the clusters self signed serving certificate from it
-* - Inserts the certificate into the route template
-* - Creates the route and sets ownership to the vcluster StatefulSet
+* - Patches the route
 */
 
 local kap = import 'lib/kapitan.libjsonnet';
@@ -18,9 +19,9 @@ local inv = kap.inventory();
 local params = inv.parameters.vcluster;
 local common = import 'common.libsonnet';
 
-local script = importstr './scripts/create-route.sh';
+local script = importstr './scripts/patch-route.sh';
 
-local routeCreateJob = function(name, secretName, host)
+local routePatchJob = function(name, secretName, host)
   local jobName = name + '-create-route';
 
   local role = kube.Role(jobName) {
@@ -32,9 +33,8 @@ local routeCreateJob = function(name, secretName, host)
         verbs: [ '*' ],
       },
       {
-        apiGroups: [ 'apps' ],
-        resources: [ 'statefulsets' ],
-        resourceNames: [ name ],
+        apiGroups: [ 'cert-manager.io' ],
+        resources: [ 'certificates' ],
         verbs: [ 'get' ],
       },
     ],
@@ -49,29 +49,6 @@ local routeCreateJob = function(name, secretName, host)
     subjects_: [ serviceAccount ],
     roleRef_: role,
   };
-
-  local routeTemplate = std.manifestJsonEx(kube._Object('route.openshift.io/v1', 'Route', name) {
-    metadata+: {
-      namespace: params.namespace,
-    },
-    spec: {
-      host: host,
-      path: '/',
-      port: {
-        targetPort: 'https',
-      },
-      tls: {
-        insecureEdgeTerminationPolicy: 'None',
-        termination: 'reencrypt',
-      },
-      to: {
-        kind: 'Service',
-        name: name,
-        weight: 100,
-      },
-      wildcardPolicy: 'None',
-    },
-  }, '');
 
   local job = kube.Job(jobName) {
     metadata+: {
@@ -89,21 +66,21 @@ local routeCreateJob = function(name, secretName, host)
               image: common.formatImage(params.images.kubectl),
               workingDir: '/export',
               command: [ 'sh' ],
-              args: [ '-eu', '-c', script, '--', routeTemplate ],
+              args: [ '-eu', '-c', script ],
               env: [
                 { name: 'HOME', value: '/export' },
                 { name: 'NAMESPACE', value: params.namespace },
-                { name: 'VCLUSTER_STS_NAME', value: name },
+                { name: 'VCLUSTER_NAME', value: name },
               ],
               volumeMounts: [
                 { name: 'export', mountPath: '/export' },
-                { name: 'kubeconfig', mountPath: '/etc/vcluster-kubeconfig', readOnly: true },
+                { name: 'vcluster-config', mountPath: '/etc/vcluster-config', readOnly: true },
               ],
             },
           },
           volumes+: [
             { name: 'export', emptyDir: {} },
-            { name: 'kubeconfig', secret: { secretName: secretName } },
+            { name: 'vcluster-config', secret: { secretName: secretName } },
           ],
         },
       },
@@ -117,5 +94,5 @@ local routeCreateJob = function(name, secretName, host)
   ];
 
 {
-  RouteCreateJob: routeCreateJob,
+  RoutePatchJob: routePatchJob,
 }

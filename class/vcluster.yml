@@ -1,5 +1,11 @@
 parameters:
   kapitan:
+    dependencies:
+      - type: helm
+        source: ${vcluster:charts:vcluster:source}
+        chart_name: vcluster
+        version: ${vcluster:charts:vcluster:version}
+        output_path: ${_base_directory}/helmcharts/vcluster/${vcluster:charts:vcluster:version}
     compile:
       - input_paths:
           - vcluster/component/app.jsonnet
@@ -9,3 +15,12 @@ parameters:
           - vcluster/component/main.jsonnet
         input_type: jsonnet
         output_path: ${_instance}/
+      - output_path: ${_instance}/01_vcluster_helmchart
+        input_type: helm
+        output_type: yaml
+        input_paths:
+          - ${_base_directory}/helmcharts/vcluster/${vcluster:charts:vcluster:version}
+        helm_params:
+          name: "${_instance}"
+          namespace: "${vcluster:namespace}"
+        helm_values: ${vcluster:helm_values}

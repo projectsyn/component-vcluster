@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: vcluster
+    chart: vcluster-0.24.1
+    heritage: Helm
+    release: openshift
+    vcluster.loft.sh/service: 'true'
+  name: openshift
+  namespace: syn-openshift
+spec:
+  ports:
+    - name: https
+      nodePort: 0
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    - name: kubelet
+      nodePort: 0
+      port: 10250
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app: vcluster
+    release: openshift
+  type: ClusterIP
