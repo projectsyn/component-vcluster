@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: vcluster
+    chart: vcluster-0.24.1
+    heritage: Helm
+    release: openshift
+  name: openshift-headless
+  namespace: syn-openshift
+spec:
+  clusterIP: None
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+  publishNotReadyAddresses: true
+  selector:
+    app: vcluster
+    release: openshift

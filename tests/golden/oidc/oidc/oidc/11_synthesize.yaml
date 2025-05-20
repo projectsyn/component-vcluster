@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+  labels:
+    name: oidc-synthesize
+  name: oidc-synthesize
+  namespace: testns
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        name: oidc-synthesize
+    spec:
+      containers:
+        - args:
+            - -eu
+            - -c
+            - |
+              #!/bin/sh
+              set -eu
+
+              cp /etc/vcluster-kubeconfig/config ./config
+              vcluster_kubeconfig=./config
+
+              echo "Setting server URL..."
+
+              kubectl --kubeconfig "$vcluster_kubeconfig" config set clusters.local.server "$VCLUSTER_SERVER_URL"
+
+              echo "Checking for namespace 'syn'..."
+
+              exists=$(kubectl --kubeconfig "$vcluster_kubeconfig" get namespace syn --ignore-not-found)
+              if [ -n "$exists" ]; then
+                echo "Namespace 'syn' exists. Skipping synthesize."
+                exit 0
+              fi
+
+              echo "Starting synthesize..."
+
+              kubectl --kubeconfig "$vcluster_kubeconfig" apply -f "$1"
+
+              echo "Done!"
+            - --
+            - https://syn.example.com/steward/install.json?token=w84kxjbhf
+          command:
+            - sh
+          env:
+            - name: HOME
+              value: /export
+            - name: VCLUSTER_SERVER_URL
+              value: https://oidc:443
+          image: docker.io/bitnami/kubectl:1.32.1
+          imagePullPolicy: IfNotPresent
+          name: oidc-synthesize
+          ports: []
+          stdin: false
+          tty: false
+          volumeMounts:
+            - mountPath: /export
+              name: export
+            - mountPath: /etc/vcluster-kubeconfig
+              name: kubeconfig
+              readOnly: true
+          workingDir: /export
+      imagePullSecrets: []
+      initContainers: []
+      restartPolicy: OnFailure
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: export
+        - name: kubeconfig
+          secret:
+            secretName: vc-oidc

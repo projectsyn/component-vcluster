@@ -1,6 +1,5 @@
 parameters:
   vcluster:
-    host_service_cidr: 172.30.0.0/16
     namespace: testns
     storage:
       persistence: false
@@ -13,7 +12,7 @@ parameters:
         - --kube-apiserver-arg=oidc-username-claim=email
         - --kube-apiserver-arg=oidc-groups-claim=groups
 
-    additional_manifests:
+    additional_manifests: |-
       cluster-admin:
         kind: ClusterRoleBinding
         apiVersion: rbac.authorization.k8s.io/v1
@@ -26,6 +25,5 @@ parameters:
         subjects:
           - kind: Group
             name: admin
-
     syn:
       registration_url: https://syn.example.com/steward/install.json?token=w84kxjbhf

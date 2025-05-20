@@ -4,7 +4,7 @@ local params = inv.parameters.vcluster;
 local instance = inv.parameters._instance;
 local argocd = import 'lib/argocd.libjsonnet';
 
-local app = argocd.App(instance, params.namespace);
+local app = argocd.App(instance, params.namespace, base='vcluster');
 
 local appPath =
   local project = std.get(std.get(app, 'spec', {}), 'project', 'syn');

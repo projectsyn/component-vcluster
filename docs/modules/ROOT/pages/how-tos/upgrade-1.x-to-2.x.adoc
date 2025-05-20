@@ -1,0 +1,132 @@
+= Upgrade from 1.x to 2.x
+
+Version 2.x brings a lot of changes and an upgrade is currently not officially supported and not tested.
+
+This guide describes the steps to perform an upgrade of component from version 1.x to 2.x.
+
+[WARNING]
+====
+Before upgrading to version 2.x, please ensure you have a backup of the vcluster (backingStore PVC).
+As of this writing the upgrade has not been tested and is only theoretical.
+
+There are a lot of breaking changes between the two versions. So tread carefully.
+====
+
+== Introduction
+
+The component version 1.x did not use any helm chart instead the manifests where created in the component and haven't been updated.
+Vcluster has evolved a lot since than and a lot of things have changed.
+
+The new version 2.x makes use of the official helm chart to deploy the vcluster.
+
+== Step-by-step guide
+
+Some parameters have been removed or renamed. You will have to remap those before upgrading:
+
+=== Dropped parameters
+
+==== `host_service_cidr`
+
+This parameter is obsolete and is now internally handled by vcluster
+
+==== `syncer.additional_args`
+
+This parameter has been dropped, as it doesn't exist anymore upstream. Please consult the https://github.com/loft-sh/vcluster/blob/main/chart/values.yaml[values file] of the official helm chart to configure various settings that were previously done using `additional_args
+
+==== `ocp_route.host`
+
+This parameter is not used anymore. The route will automatically be patched if the `ingress.host` is set and the cluster is running on Openshift
+
+===== Examples
+
+====== Image override
+
+[source,yaml]
+----
+syncer:
+  additional_args:
+    - --override-hosts-container-image=dockerhub.vshn.net/library/alpine:3.13.1
+----
+This image override is now set as follows:
+
+[source,yaml]
+----
+helm_values:
+  sync:
+    toHost:
+      pods:
+        rewriteHosts:
+          initContainer:
+            image: dockerhub.vshn.net/library/alpine:3.20
+----
+
+====== Service mappings
+
+[source,yaml]
+-----
+syncer:
+  additional_args:
+    - --map-host-service=my-host-namespace/my-host-service=my-virtual-namespace/my-virtual-service
+    - --map-virtual-service=my-virtual-namespace/my-virtual-service/bar=my-host-service
+
+-----
+
+This is now done like using `replicateServices`
+
+[source,yaml]
+----
+helm_values:
+  replicateServices:
+    fromHost:
+    - from: my-host-namespace/my-host-service
+      to: my-virtual-namespace/my-virtual-service
+
+
+    toHost:
+    - from: my-virtual-namespace/my-virtual-service
+      to: my-host-service
+----
+
+=== Changed parameters
+
+==== `storage.persistence`
+
+This changed from true to auto to let vcluster decide the proper persistence setting automatically (eg. disable persistence when using dedicated etcd)
+
+==== `resources.k3s`
+
+This container is now an init container and not a regular container. Therefore the resources have been adjusted accordingly and now match the upstream helm chart values.
+
+==== `resources.syncer`
+
+The resources on this container have been increased to match the recommended default values from the upstream chart.
+
+==== `additional_manifests`
+
+This parameter has changed form a dict to a string, as the upstream field changed.
+
+=== New parameters
+
+==== `backing_store`
+
+This new parameter allows to configure the backingStore for the vcluster. Here you can for example configure the vcluster to use etcd instead of the default embedded database (sqlite).
+
+==== `helm_values`
+
+The raw default values of the component. See the https://github.com/loft-sh/vcluster/blob/main/chart/values.yaml[value file] of the offical helm chart for all options.
+
+
+=== Procedure
+
+[WARNING] This procedure has not been tested yet. Please tread very carefully.
+
+Once you have updated all parameters compile the catalog and verify thoroughly the diff. Most notably check the statefulset and the configured volumeClaim. It's important that the volumeClaimName is identical to the old version to ensure that the same volume is used.
+
+Due to the many changes in the statefulset you won't be able to apply the changes in the statefulset. You will have to first delete the statefulset and then have it reapplied by argocd:
+
+[source,bash]
+----
+kubectl -n ${NS} delete statefulset ${INSTANCE_NAME} --cascade=orphan
+----
+
+Once the statefulset has been recreated check the logs of the vcluster pod to ensure everything is working as expected.
