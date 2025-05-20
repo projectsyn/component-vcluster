@@ -23,7 +23,7 @@ parameters:
       kubectl:
         registry: docker.io
         image: bitnami/kubectl
-        tag: "1.32.1"
+        tag: "1.32.4"
 
     storage:
       persistence: auto
