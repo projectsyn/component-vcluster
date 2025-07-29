@@ -19,7 +19,7 @@ local synthesize = function(name, secretName, url)
         spec+: {
           containers_+: {
             patch_crds: kube.Container(jobName) {
-              image: common.formatImage(params.images.kubectl),
+              image: common.formatImage(params.images.oc),
               workingDir: '/export',
               command: [ 'sh' ],
               args: [ '-eu', '-c', importstr './scripts/synthesize.sh', '--', url ],
