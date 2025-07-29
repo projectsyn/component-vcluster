@@ -63,7 +63,7 @@ local routePatchJob = function(name, secretName, host)
           serviceAccountName: serviceAccount.metadata.name,
           containers_+: {
             create_route: kube.Container(name) {
-              image: common.formatImage(params.images.kubectl),
+              image: common.formatImage(params.images.oc),
               workingDir: '/export',
               command: [ 'sh' ],
               args: [ '-eu', '-c', script ],
