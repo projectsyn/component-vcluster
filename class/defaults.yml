@@ -16,10 +16,10 @@ parameters:
         registry: docker.io
         image: loftsh/vcluster
         tag: "0.14.1"
-      kubectl:
-        registry: docker.io
-        image: bitnami/kubectl
-        tag: "1.28.15"
+      oc:
+        registry: quay.io
+        image: appuio/oc
+        tag: v4.18
 
     storage:
       persistence: true
