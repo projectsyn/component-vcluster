@@ -3,6 +3,7 @@ on:
   pull_request:
     branches:
       - master
+      - release-*
 
 env:
   COMPONENT_NAME: vcluster
