@@ -15,7 +15,7 @@ parameters:
       k3s:
         registry: docker.io
         image: rancher/k3s
-        tag: v1.32.1-k3s1
+        tag: v1.32.8-k3s1
       syncer:
         registry: ghcr.io
         image: loft-sh/vcluster-oss

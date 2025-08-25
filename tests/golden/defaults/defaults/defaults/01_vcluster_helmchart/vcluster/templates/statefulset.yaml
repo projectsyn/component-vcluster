@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 9d347a576d42fa8f2e16fee713ec9f923ca58346f60e274590a48450a6a557e1
+        vClusterConfigHash: 738e45bfe0bde23bee798c347f5b2f8d5a9fa0d6a023ed2d1c8b809730185e6d
       labels:
         app: vcluster
         release: defaults
@@ -105,7 +105,7 @@ spec:
             - cp /bin/k3s /binaries/k3s
           command:
             - /bin/sh
-          image: docker.io/rancher/k3s:v1.32.1-k3s1
+          image: docker.io/rancher/k3s:v1.32.8-k3s1
           name: vcluster
           resources:
             limits:
