@@ -9,7 +9,7 @@ parameters:
     charts:
       vcluster:
         source: https://charts.loft.sh
-        version: 0.24.1
+        version: 0.24.2
 
     images:
       k3s:
