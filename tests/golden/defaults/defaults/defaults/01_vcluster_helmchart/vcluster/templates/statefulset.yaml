@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 62d1e7fe473097f817dbf66478a8c81445d1f35db63c6d3419f9454f10f6df4c
+        vClusterConfigHash: d2a127ecbc0ffc599bdd13edd878f6fa8a53509b57191955fb709ab243a7f2f9
       labels:
         app: vcluster
         release: defaults
@@ -42,7 +42,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: ghcr.io/loft-sh/vcluster-oss:0.24.1
+          image: ghcr.io/loft-sh/vcluster-oss:0.29.0
           imagePullPolicy: null
           livenessProbe:
             failureThreshold: 60
