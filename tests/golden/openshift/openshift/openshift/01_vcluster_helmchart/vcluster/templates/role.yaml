@@ -3,7 +3,7 @@ kind: Role
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.24.1
+    chart: vcluster-0.29.1
     heritage: Helm
     release: openshift
   name: vc-openshift
@@ -50,9 +50,17 @@ rules:
       - ''
     resources:
       - endpoints
-      - events
       - pods/log
     verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ''
+    resources:
+      - events
+    verbs:
+      - create
       - get
       - list
       - watch
