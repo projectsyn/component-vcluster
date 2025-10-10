@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.24.1
+    chart: vcluster-0.29.1
     heritage: Helm
     release: defaults
   name: defaults
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 62d1e7fe473097f817dbf66478a8c81445d1f35db63c6d3419f9454f10f6df4c
+        vClusterConfigHash: be44cc2be179965a92656080f87aa50b973af2b81f68d265e926dd1772498c50
       labels:
         app: vcluster
         release: defaults
@@ -30,6 +30,8 @@ spec:
         - env:
             - name: VCLUSTER_NAME
               value: defaults
+            - name: LOFT_LOG_ENCODING
+              value: console
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -42,6 +44,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
           image: ghcr.io/loft-sh/vcluster-oss:0.24.1
           imagePullPolicy: null
           livenessProbe:
@@ -68,7 +74,7 @@ spec:
               memory: 2Gi
             requests:
               cpu: 200m
-              ephemeral-storage: 400Mi
+              ephemeral-storage: 1Gi
               memory: 256Mi
           securityContext:
             allowPrivilegeEscalation: false
@@ -91,13 +97,10 @@ spec:
               name: helm-cache
             - mountPath: /etc/rancher
               name: k3s-config
-            - mountPath: /var/vcluster
+            - mountPath: /var/lib/vcluster
               name: vcluster-config
             - mountPath: /tmp
               name: tmp
-            - mountPath: /manifests/coredns
-              name: coredns
-              readOnly: true
       enableServiceLinks: true
       initContainers:
         - args:
@@ -134,9 +137,6 @@ spec:
         - name: vcluster-config
           secret:
             secretName: vc-config-defaults
-        - configMap:
-            name: vc-coredns-defaults
-          name: coredns
   volumeClaimTemplates:
     - metadata:
         name: data

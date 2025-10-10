@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.24.1
+    chart: vcluster-0.29.1
     heritage: Helm
     release: openshift
   name: openshift
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 90740eb7682b116ae745ab1e9485583bdf819a71fa73a74b28f8b3c4673e8f60
+        vClusterConfigHash: ed38ce274f7e816a415a208aec0027dbce9b75f0498a68b3c5556a2189555747
       labels:
         app: vcluster
         release: openshift
@@ -30,6 +30,8 @@ spec:
         - env:
             - name: VCLUSTER_NAME
               value: openshift
+            - name: LOFT_LOG_ENCODING
+              value: console
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -42,6 +44,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
           image: ghcr.io/loft-sh/vcluster-oss:0.24.1
           imagePullPolicy: null
           livenessProbe:
@@ -68,7 +74,7 @@ spec:
               memory: 2Gi
             requests:
               cpu: 200m
-              ephemeral-storage: 400Mi
+              ephemeral-storage: 1Gi
               memory: 256Mi
           securityContext:
             allowPrivilegeEscalation: false
@@ -91,13 +97,10 @@ spec:
               name: helm-cache
             - mountPath: /etc/rancher
               name: k3s-config
-            - mountPath: /var/vcluster
+            - mountPath: /var/lib/vcluster
               name: vcluster-config
             - mountPath: /tmp
               name: tmp
-            - mountPath: /manifests/coredns
-              name: coredns
-              readOnly: true
       enableServiceLinks: true
       initContainers:
         - args:
@@ -134,9 +137,6 @@ spec:
         - name: vcluster-config
           secret:
             secretName: vc-config-openshift
-        - configMap:
-            name: vc-coredns-openshift
-          name: coredns
   volumeClaimTemplates:
     - metadata:
         name: data
