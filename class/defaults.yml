@@ -43,7 +43,7 @@ parameters:
 
     backing_store: {}
 
-    additional_manifests: nil
+    additional_manifests: ""
 
     resources:
       k8s:

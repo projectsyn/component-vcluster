@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: e717376d8a8047ca408a37574e3179a6a74f675f878cdb14d8e213d1bd3421db
+        vClusterConfigHash: 390d81e6526aed16b6ff558b9c4c3c8eed44609a62d297abe1a5c87d51ae2dfc
       labels:
         app: vcluster
         release: oidc
