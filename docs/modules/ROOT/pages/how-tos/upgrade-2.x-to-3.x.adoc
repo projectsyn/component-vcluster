@@ -1,0 +1,63 @@
+= Upgrade from 2.x to 3.x
+
+Version 3.x removes the deprecated k3s distro from the configuration.
+It is replaced with a vanilla k8s distribution.
+The helmchart and vcluster version also get bumped to 0.29.1 to support the new configurations.
+
+[WARNING]
+====
+Before upgrading to version 3.x, please ensure you have a backup of the vcluster (backingStore PVC).
+
+Migrating from k3s to k8s is automatic and should not need any manual steps.
+However if there are issues you can consult https://www.vcluster.com/docs/vcluster/deploy/upgrade/distro-migration#troubleshoot-migration-issues[the official migration docs].
+====
+
+== Migrate remove fields
+
+All fields named `k3s` have been renamed to `k8s`.
+But unfortunately the configuration is not a drop-in replacement.
+
+The k3s image was an all-in-one kind of deal.
+There was only a single `additional_args` parameter that got passed to k3s and those parameters specified if they are for the apiServer or any other component of k8s.
+However with the vanilla k8s distribution it's now split across three differenct helm values.
+Each with their own `additional_args` setting:
+
+- apiServer: `additional_apiserver_args`
+- controllerManager: `additional_controlmanager_args`
+- scheduler: `additional_scheduler_args`
+
+[WARNING]
+====
+The migration supports sqlite and embedded etcd backingStores.
+However the embedded etcd backingStores are an enterprise feature.
+OSS versions of vcluster with etcd will have a seperately deployed etcd.
+Migrations still work, but the certificates will get re-created.
+
+After a migration with etcd kubeconfigs and certificates need to be updated wherever they are referenced.
+====
+
+=== Migrating a vcluster with apiServer settings
+
+[source,diff]
+----
+parameters:
+  vcluster:
+-    k3s:
++    k8s:
+      additional_args:
+-        - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
+-        - --kube-apiserver-arg=oidc-client-id=local
+-        - --kube-apiserver-arg=oidc-username-claim=email
+-        - --kube-apiserver-arg=oidc-groups-claim=groups
++        - --oidc-issuer-url=https://id.local/auth/realms/local
++        - --oidc-client-id=local
++        - --oidc-username-claim=email
++        - --oidc-groups-claim=groups
+----
+
+[NOTE]
+====
+The output of `kubectl get nodes` will still show nodes with `v1.32.9+k3s1`.
+That's expected.
+To check th actual used image use: `kubectl -n $vlcusterns get pods $vclusterpod -oyaml | grep image:`.
+====

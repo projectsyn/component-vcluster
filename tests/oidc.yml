@@ -5,12 +5,12 @@ parameters:
       persistence: false
     ingress:
       host: testcluster.local
-    k3s:
-      additional_args:
-        - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
-        - --kube-apiserver-arg=oidc-client-id=local
-        - --kube-apiserver-arg=oidc-username-claim=email
-        - --kube-apiserver-arg=oidc-groups-claim=groups
+    k8s:
+      additional_apiserver_args:
+        - --oidc-issuer-url=https://id.local/auth/realms/local
+        - --oidc-client-id=local
+        - --oidc-username-claim=email
+        - --oidc-groups-claim=groups
 
     additional_manifests: |-
       cluster-admin:

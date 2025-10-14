@@ -41,7 +41,7 @@ Dictionary containing the container images used by this component.
 
 The `kubectl` image is used to create OCP routes. The `kubectl` and `jq` binaries are required in this image.
 
-== `k3s.additional_args`
+== `k8s.additional_apiserver_args`
 
 [horizontal]
 type:: list
@@ -50,16 +50,47 @@ example::
 +
 [source,yaml]
 ----
-k3s:
-  additional_args:
-  - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
-  - --kube-apiserver-arg=oidc-client-id=local
-  - --kube-apiserver-arg=oidc-username-claim=email
-  - --kube-apiserver-arg=oidc-groups-claim=groups
+k8s:
+  additional_apiserver_args:
+  - --oidc-issuer-url=https://id.local/auth/realms/local
+  - --oidc-client-id=local
+  - --oidc-username-claim=email
+  - --oidc-groups-claim=groups
 ----
 
-Additional arguments for the k3s cluster.
+Additional arguments for the k8s apiserver.
 
+== `k8s.additional_controllermanager_args`
+
+[horizontal]
+type:: list
+default:: `[]`
+example::
++
+[source,yaml]
+----
+k8s:
+  additional_controllermanager_args:
+  - --arg1=foobar
+----
+
+Additional arguments for the k8s controllerManager.
+
+== `k8s.additional_scheduler_args`
+
+[horizontal]
+type:: list
+default:: `[]`
+example::
++
+[source,yaml]
+----
+k8s:
+  additional_scheduler_args:
+  - --arg1=foobar
+----
+
+Additional arguments for the k8s scheduler.
 
 == `backing_store`
 
@@ -77,7 +108,7 @@ default::
 [source,yaml]
 ----
 resources:
-  k3s:
+  k8s:
     requests:
       cpu: 40m
       memory: 64Mi
@@ -92,7 +123,7 @@ resources:
       memory: 2Gi
 ----
 
-The resource requests and limits for the k3s and syncer containers.
+The resource requests and limits for the k8s and syncer containers.
 
 
 == `ingress.host`
@@ -206,7 +237,7 @@ Manifests that should be applied to the vcluster after startup.
 [horizontal]
 type:: dict
 
-You can override the default helm values here. The default configuration comes with k3s as well as ingress enabled. See defaults.yaml for the exact configuration.
+You can override the default helm values here. The default configuration comes with k8s as well as ingress enabled. See defaults.yaml for the exact configuration.
 
 
 == Example
@@ -215,12 +246,12 @@ You can override the default helm values here. The default configuration comes w
 ----
 ingress:
   host: testcluster.local
-k3s:
-  additional_args:
-    - --kube-apiserver-arg=oidc-issuer-url=https://id.local/auth/realms/local
-    - --kube-apiserver-arg=oidc-client-id=local
-    - --kube-apiserver-arg=oidc-username-claim=email
-    - --kube-apiserver-arg=oidc-groups-claim=groups
+k8s:
+  additional_apiserver_args:
+    - --oidc-issuer-url=https://id.local/auth/realms/local
+    - --oidc-client-id=local
+    - --oidc-username-claim=email
+    - --oidc-groups-claim=groups
 backing_store:
   etcd:
     deploy:

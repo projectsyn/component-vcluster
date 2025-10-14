@@ -9,17 +9,17 @@ parameters:
     charts:
       vcluster:
         source: https://charts.loft.sh
-        version: 0.24.1
+        version: 0.29.1
 
     images:
-      k3s:
-        registry: docker.io
-        image: rancher/k3s
-        tag: v1.32.9-k3s1
+      k8s:
+        registry: ghcr.io
+        image: loft-sh/kubernetes
+        tag: v1.32.9
       syncer:
         registry: ghcr.io
         image: loft-sh/vcluster-oss
-        tag: "0.24.1"
+        tag: "0.29.1"
       oc:
         registry: quay.io
         image: appuio/oc
@@ -30,8 +30,10 @@ parameters:
       size: 5Gi
       class_name: null
 
-    k3s:
-      additional_args: []
+    k8s:
+      additional_apiserver_args: []
+      additional_controllermanager_args: []
+      additional_scheduler_args: []
 
     ingress:
       enabled: true
@@ -44,7 +46,7 @@ parameters:
     additional_manifests: nil
 
     resources:
-      k3s:
+      k8s:
         requests:
           cpu: 40m
           memory: 64Mi
@@ -66,13 +68,20 @@ parameters:
       controlPlane:
         distro:
           k3s:
+            enabled: false
+          k8s:
             enabled: true
-            extraArgs: ${vcluster:k3s:additional_args}
+            apiServer:
+              extraArgs: ${vcluster:k8s:additional_apiserver_args}
+            controllerManager:
+              extraArgs: ${vcluster:k8s:additional_controllermanager_args}
+            scheduler:
+              extraArgs: ${vcluster:k8s:additional_scheduler_args}
             image:
-              registry: ${vcluster:images:k3s:registry}
-              repository: ${vcluster:images:k3s:image}
-              tag: ${vcluster:images:k3s:tag}
-            resources: ${vcluster:resources:k3s}
+              registry: ${vcluster:images:k8s:registry}
+              repository: ${vcluster:images:k8s:image}
+              tag: ${vcluster:images:k8s:tag}
+            resources: ${vcluster:resources:k8s}
 
         statefulSet:
           security:
@@ -80,8 +89,7 @@ parameters:
               allowPrivilegeEscalation: false
               runAsUser: null
               runAsGroup: null
-          resources:
-            ${vcluster:resources:syncer}
+          resources: ${vcluster:resources:syncer}
           image:
             registry: ${vcluster:images:syncer:registry}
             repository: ${vcluster:images:syncer:image}
