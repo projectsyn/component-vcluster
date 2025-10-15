@@ -6,7 +6,7 @@ vcluster_kubeconfig=./config
 
 echo "Setting server URL..."
 
-kubectl --kubeconfig "$vcluster_kubeconfig" config set clusters.local.server "$VCLUSTER_SERVER_URL"
+kubectl --kubeconfig "$vcluster_kubeconfig" config set clusters.kubernetes.server "$VCLUSTER_SERVER_URL"
 
 echo "Checking for namespace 'syn'..."
 
