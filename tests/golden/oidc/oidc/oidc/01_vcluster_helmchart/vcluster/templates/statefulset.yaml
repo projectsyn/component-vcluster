@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 390d81e6526aed16b6ff558b9c4c3c8eed44609a62d297abe1a5c87d51ae2dfc
+        vClusterConfigHash: 5be9f2d399322547d8d41ae19fc2a1b56cea7da986ccc90ae83842aca6e6e91e
       labels:
         app: vcluster
         release: oidc
@@ -108,7 +108,7 @@ spec:
             - /binaries/
           command:
             - cp
-          image: ghcr.io/loft-sh/kubernetes:v1.32.9
+          image: ghcr.io/loft-sh/kubernetes:v1.34.1
           name: kubernetes
           resources:
             limits:
