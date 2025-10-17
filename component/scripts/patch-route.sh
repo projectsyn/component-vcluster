@@ -15,7 +15,7 @@ echo "Check if route is already patched"
 
 patched=$(kubectl -n "$NAMESPACE" get route "$route_name" -o jsonpath='{.spec.tls.destinationCACertificate}')
 
-if [ "$patched" != "" ]; then
+if [ "$patched" = "$(cat $cert)" ]; then
     echo "Route is already patched. Nothing to do"
     exit
 fi

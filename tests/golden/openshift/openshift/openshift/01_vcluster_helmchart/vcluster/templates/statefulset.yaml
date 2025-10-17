@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.24.1
+    chart: vcluster-0.29.1
     heritage: Helm
     release: openshift
   name: openshift
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 90740eb7682b116ae745ab1e9485583bdf819a71fa73a74b28f8b3c4673e8f60
+        vClusterConfigHash: c5485067ba062419a277dbfae0fdac3656d5da55f9227d22aca7cf5024a571d3
       labels:
         app: vcluster
         release: openshift
@@ -30,6 +30,8 @@ spec:
         - env:
             - name: VCLUSTER_NAME
               value: openshift
+            - name: LOFT_LOG_ENCODING
+              value: console
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -42,7 +44,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: ghcr.io/loft-sh/vcluster-oss:0.24.1
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+          image: ghcr.io/loft-sh/vcluster-oss:0.29.1
           imagePullPolicy: null
           livenessProbe:
             failureThreshold: 60
@@ -68,7 +74,7 @@ spec:
               memory: 2Gi
             requests:
               cpu: 200m
-              ephemeral-storage: 400Mi
+              ephemeral-storage: 1Gi
               memory: 256Mi
           securityContext:
             allowPrivilegeEscalation: false
@@ -89,24 +95,20 @@ spec:
               name: certs
             - mountPath: /.cache/helm
               name: helm-cache
-            - mountPath: /etc/rancher
-              name: k3s-config
-            - mountPath: /var/vcluster
+            - mountPath: /var/lib/vcluster
               name: vcluster-config
             - mountPath: /tmp
               name: tmp
-            - mountPath: /manifests/coredns
-              name: coredns
-              readOnly: true
       enableServiceLinks: true
       initContainers:
         - args:
-            - -c
-            - cp /bin/k3s /binaries/k3s
+            - -r
+            - /kubernetes/.
+            - /binaries/
           command:
-            - /bin/sh
-          image: docker.io/rancher/k3s:v1.32.9-k3s1
-          name: vcluster
+            - cp
+          image: ghcr.io/loft-sh/kubernetes:v1.32.9
+          name: kubernetes
           resources:
             limits:
               cpu: 100m
@@ -129,14 +131,9 @@ spec:
           name: tmp
         - emptyDir: {}
           name: certs
-        - emptyDir: {}
-          name: k3s-config
         - name: vcluster-config
           secret:
             secretName: vc-config-openshift
-        - configMap:
-            name: vc-coredns-openshift
-          name: coredns
   volumeClaimTemplates:
     - metadata:
         name: data
