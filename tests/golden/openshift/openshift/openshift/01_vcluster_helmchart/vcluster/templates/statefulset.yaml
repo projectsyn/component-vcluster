@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.29.1
+    chart: vcluster-0.30.0
     heritage: Helm
     release: openshift
   name: openshift
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: eb8f606f60f11a1cbd1ef3c7ffc41b8fcd64687754daed6d9dcc32f73c1b9226
+        vClusterConfigHash: 86e42aaa8a5dc469ff835b63c2ab48ad51cbe7d3ebcb0f2679cf75d9789c03f9
       labels:
         app: vcluster
         release: openshift
@@ -70,7 +70,7 @@ spec:
             timeoutSeconds: 3
           resources:
             limits:
-              ephemeral-storage: 8Gi
+              ephemeral-storage: 10Gi
               memory: 2Gi
             requests:
               cpu: 200m
