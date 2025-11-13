@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.29.1
+    chart: vcluster-0.30.0
     heritage: Helm
     release: oidc
   name: oidc
@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 8c5e26a3eae825582220e8387a9a34d38ae1545e410552e9791e78174424aaee
+        vClusterConfigHash: 83267dcc3c0f58e91286dfefc2b5376f1da0a82adf6638143e9fbf5774a937be
       labels:
         app: vcluster
         release: oidc
@@ -71,7 +71,7 @@ spec:
             timeoutSeconds: 3
           resources:
             limits:
-              ephemeral-storage: 8Gi
+              ephemeral-storage: 10Gi
               memory: 2Gi
             requests:
               cpu: 200m
