@@ -1,0 +1,35 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: vcluster
+    chart: vcluster-0.30.4
+    heritage: Helm
+    release: openshift
+  name: vc-openshift-v-syn-openshift
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - persistentvolumes
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshotclasses
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshotcontents
+    verbs:
+      - create
+      - delete
+      - patch
+      - update
+      - get
+      - list

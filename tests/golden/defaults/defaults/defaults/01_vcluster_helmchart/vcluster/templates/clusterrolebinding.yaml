@@ -1,18 +1,17 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   labels:
     app: vcluster
     chart: vcluster-0.30.4
     heritage: Helm
-    release: openshift
-  name: vc-openshift
-  namespace: syn-openshift
+    release: defaults
+  name: vc-defaults-v-syn-defaults
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: vc-openshift
+  kind: ClusterRole
+  name: vc-defaults-v-syn-defaults
 subjects:
   - kind: ServiceAccount
-    name: vc-openshift
-    namespace: syn-openshift
+    name: vc-defaults
+    namespace: syn-defaults

@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.29.1
+    chart: vcluster-0.30.4
     heritage: Helm
     release: defaults
   name: defaults
@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 60127bac3f216fd3faed77658b27fe66bd76049170485f5bbefd5c9743238d68
+        vClusterConfigHash: 90954e7b0c4928723487268d662b5650fd9c663768408afa31c608003a709674
       labels:
         app: vcluster
         release: defaults
@@ -70,7 +70,7 @@ spec:
             timeoutSeconds: 3
           resources:
             limits:
-              ephemeral-storage: 8Gi
+              ephemeral-storage: 10Gi
               memory: 2Gi
             requests:
               cpu: 200m
@@ -121,7 +121,7 @@ spec:
             - mountPath: /binaries
               name: binaries
       serviceAccountName: vc-defaults
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 15
       volumes:
         - emptyDir: {}
           name: helm-cache
