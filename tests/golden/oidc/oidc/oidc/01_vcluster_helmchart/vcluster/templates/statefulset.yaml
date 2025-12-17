@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.29.1
+    chart: vcluster-0.30.4
     heritage: Helm
     release: oidc
   name: oidc
@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 65f80a606c4e5cbc9f3c51d32f1d9037c69441d9977edff356af75e50e982301
+        vClusterConfigHash: 351870f7e867a0cfe355943625d6be782a4338d0f4da3e511852ab5750b90f97
       labels:
         app: vcluster
         release: oidc
@@ -71,7 +71,7 @@ spec:
             timeoutSeconds: 3
           resources:
             limits:
-              ephemeral-storage: 8Gi
+              ephemeral-storage: 10Gi
               memory: 2Gi
             requests:
               cpu: 200m
@@ -122,7 +122,7 @@ spec:
             - mountPath: /binaries
               name: binaries
       serviceAccountName: vc-oidc
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 15
       volumes:
         - emptyDir: {}
           name: helm-cache

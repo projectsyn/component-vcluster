@@ -3,7 +3,7 @@ kind: Role
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.29.1
+    chart: vcluster-0.30.4
     heritage: Helm
     release: oidc
   name: vc-oidc
@@ -74,6 +74,18 @@ rules:
       - patch
       - update
   - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - create
+      - list
+      - get
+      - delete
+      - patch
+      - update
+      - watch
+  - apiGroups:
       - networking.k8s.io
     resources:
       - ingresses
@@ -85,6 +97,17 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshots
+    verbs:
+      - create
+      - delete
+      - patch
+      - update
+      - get
+      - list
   - apiGroups:
       - ''
     resources:
