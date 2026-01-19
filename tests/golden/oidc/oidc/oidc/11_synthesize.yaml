@@ -52,7 +52,7 @@ spec:
               value: /export
             - name: VCLUSTER_SERVER_URL
               value: https://oidc:443
-          image: quay.io/appuio/oc:v4.19
+          image: quay.io/appuio/oc:v4.20
           imagePullPolicy: IfNotPresent
           name: oidc-synthesize
           ports: []
