@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.29.1
+    chart: vcluster-0.29.3
     heritage: Helm
     release: defaults
   name: defaults-headless
