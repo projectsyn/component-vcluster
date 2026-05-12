@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: d68e2e3ccbd99ba0c64d2bd6de45dcc617ad1ec968941dd6c9de3a6bc740a766
+        vClusterConfigHash: 61b1a4ec47d734342cfe91f19e59b3fbeda2a77c1fe2ccbf7b22d1da72dc70f8
       labels:
         app: vcluster
         release: defaults
