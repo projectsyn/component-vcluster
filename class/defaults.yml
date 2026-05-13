@@ -15,7 +15,7 @@ parameters:
       k8s:
         registry: ghcr.io
         image: loft-sh/kubernetes
-        tag: v1.32.13
+        tag: v1.36.1
       syncer:
         registry: ghcr.io
         image: loft-sh/vcluster-oss
