@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   labels:
     app: vcluster
-    chart: vcluster-0.29.1
+    chart: vcluster-0.29.3
     heritage: Helm
     release: openshift
   name: openshift
@@ -121,7 +121,7 @@ spec:
             - mountPath: /binaries
               name: binaries
       serviceAccountName: vc-openshift
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 15
       volumes:
         - emptyDir: {}
           name: helm-cache
