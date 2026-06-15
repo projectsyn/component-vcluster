@@ -23,7 +23,7 @@ parameters:
       oc:
         registry: quay.io
         image: appuio/oc
-        tag: v4.20
+        tag: v4.21
 
     storage:
       persistence: auto
