@@ -3,6 +3,7 @@ parameters:
     =_metadata:
       multi_instance: true
       multi_tenant: true
+      multi_version: true
     namespace: syn-${_instance}
     namespaceMetadata: {}
 
