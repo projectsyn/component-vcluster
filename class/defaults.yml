@@ -20,7 +20,7 @@ parameters:
       syncer:
         registry: ghcr.io
         image: loft-sh/vcluster-oss
-        tag: "0.29.1"
+        tag: "0.37.0"
       oc:
         registry: quay.io
         image: appuio/oc
