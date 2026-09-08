@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: 61b1a4ec47d734342cfe91f19e59b3fbeda2a77c1fe2ccbf7b22d1da72dc70f8
+        vClusterConfigHash: 4e10e961c64f33e4d6e21023dd1877e6c890f15b4e3643ed13844d6069a4858d
       labels:
         app: vcluster
         release: defaults
@@ -48,7 +48,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.hostIP
-          image: ghcr.io/loft-sh/vcluster-oss:0.29.1
+          image: ghcr.io/loft-sh/vcluster-oss:0.37.0
           imagePullPolicy: null
           livenessProbe:
             failureThreshold: 60
