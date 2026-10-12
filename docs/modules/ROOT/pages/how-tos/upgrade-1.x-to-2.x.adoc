@@ -105,6 +105,8 @@ The resources on this container have been increased to match the recommended def
 
 This parameter has changed form a dict to a string, as the upstream field changed.
 
+The structure of the parameter value also needs to change: in 1.x, it is a dictionary where each key contains a separate manifest. In 2.x, this is instead a multidocument YAML literal, with individual manifests separated with `---`.
+
 === New parameters
 
 ==== `backing_store`
@@ -120,7 +122,7 @@ The raw default values of the component. See the https://github.com/loft-sh/vclu
 
 [WARNING] This procedure has not been tested yet. Please tread very carefully.
 
-Once you have updated all parameters compile the catalog and verify thoroughly the diff. Most notably check the statefulset and the configured volumeClaim. It's important that the volumeClaimName is identical to the old version to ensure that the same volume is used.
+Once you have updated all parameters, compile the catalog and verify thoroughly the diff. Most notably check the statefulset and the configured volumeClaim. It's important that the volumeClaimName is identical to the old version to ensure that the same volume is used.
 
 Due to the many changes in the statefulset you won't be able to apply the changes in the statefulset. You will have to first delete the statefulset and then have it reapplied by argocd:
 
