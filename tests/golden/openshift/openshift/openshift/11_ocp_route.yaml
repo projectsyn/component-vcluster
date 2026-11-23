@@ -1,0 +1,165 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations: {}
+  labels:
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
+rules:
+  - apiGroups:
+      - route.openshift.io
+    resources:
+      - routes
+      - routes/custom-host
+    verbs:
+      - '*'
+  - apiGroups:
+      - cert-manager.io
+    resources:
+      - certificates
+    verbs:
+      - get
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations: {}
+  labels:
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: openshift-create-route
+subjects:
+  - kind: ServiceAccount
+    name: openshift-create-route
+    namespace: syn-openshift
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+  labels:
+    name: openshift-create-route
+  name: openshift-create-route
+  namespace: syn-openshift
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        name: openshift-create-route
+    spec:
+      containers:
+        - args:
+            - -eu
+            - -c
+            - |
+              #!/bin/sh
+              set -eu
+
+              cert=/etc/vcluster-config/certificate-authority
+
+              echo "Using ca: $cert"
+
+              echo "Looking for routes.route.openshift.io for ${VCLUSTER_NAME}..."
+
+              route_name=$(kubectl -n "$NAMESPACE" get routes.route.openshift.io -ojson | jq -r '.items[].metadata | select(.ownerReferences !=null) | select(.ownerReferences[].name=="'"${VCLUSTER_NAME}"'") | .name')
+
+              echo "Found route: $route_name"
+
+              echo "Check if route is already patched"
+
+              patched=$(kubectl -n "$NAMESPACE" get route "$route_name" -o jsonpath='{.spec.tls.destinationCACertificate}')
+
+              if [ "$patched" = "$(cat $cert)" ]; then
+                  echo "Route is already patched. Nothing to do"
+                  exit
+              fi
+
+              # Check if the ingress uses a custom certificate or the cluster's default apps
+              # certificate.
+              ingress_custom_certificate=$(kubectl -n "$NAMESPACE" get ingress "$VCLUSTER_NAME" -ojson | jq -r '.spec.tls[0] != {}')
+              if [ "$ingress_custom_certificate" != "false" ]; then
+                  echo "Waiting for route to have a proper certificate"
+
+                  i=0
+                  while [ "$i" -lt 100 ]; do
+                      certificate_status=$(kubectl -n "$NAMESPACE" get certificate "$VCLUSTER_NAME"-tls -o jsonpath='{.status.conditions[0].type}')
+                      if [ "$certificate_status" = "Ready" ]; then break; fi
+                      sleep 10
+                      $i++
+                  done
+
+                  if [ "$certificate_status" != "Ready" ]; then
+                      echo "Certificate is not ready. Please check status of certificate issuance."
+                      exit 1
+                  fi
+              fi
+
+              patch_cert="$(cat ${cert} | sed 's/$/\\n/' | tr -d '\n')"
+
+              patch_file=$(mktemp)
+
+              printf '%s\n' '{"spec":{"tls":{"destinationCACertificate":"'"$(printf '%s\n' "${patch_cert}")"'"}}}' > "${patch_file}"
+
+              echo "Patching route..."
+
+              kubectl -n "$NAMESPACE" patch route "$route_name" --patch-file "${patch_file}"
+
+              rm "${patch_file}"
+
+              echo "Done!"
+          command:
+            - sh
+          env:
+            - name: HOME
+              value: /export
+            - name: NAMESPACE
+              value: syn-openshift
+            - name: VCLUSTER_NAME
+              value: openshift
+          image: quay.io/appuio/oc:v4.22
+          imagePullPolicy: IfNotPresent
+          name: openshift
+          ports: []
+          stdin: false
+          tty: false
+          volumeMounts:
+            - mountPath: /export
+              name: export
+            - mountPath: /etc/vcluster-config
+              name: vcluster-config
+              readOnly: true
+          workingDir: /export
+      imagePullSecrets: []
+      initContainers: []
+      restartPolicy: OnFailure
+      serviceAccountName: openshift-create-route
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - emptyDir: {}
+          name: export
+        - name: vcluster-config
+          secret:
+            secretName: vc-openshift

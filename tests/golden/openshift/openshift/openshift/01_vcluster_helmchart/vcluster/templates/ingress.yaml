@@ -15,7 +15,7 @@ metadata:
   namespace: syn-openshift
 spec:
   rules:
-    - host: null
+    - host: test.apps.local
       http:
         paths:
           - backend:
@@ -27,5 +27,5 @@ spec:
             pathType: ImplementationSpecific
   tls:
     - hosts:
-        - null
+        - test.apps.local
       secretName: openshift-tls

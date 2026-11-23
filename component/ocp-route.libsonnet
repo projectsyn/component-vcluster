@@ -37,6 +37,11 @@ local routePatchJob = function(name, secretName, host)
         resources: [ 'certificates' ],
         verbs: [ 'get' ],
       },
+      {
+        apiGroups: [ 'networking.k8s.io' ],
+        resources: [ 'ingresses' ],
+        verbs: [ 'get' ],
+      },
     ],
   };
 
