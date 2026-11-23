@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        vClusterConfigHash: e6ff78ecfae4ddfca68b762f5560bb60a1dd12dbc52d2cf30f5aa43236fdbe37
+        vClusterConfigHash: 78271d793178c7475018160d2c1f521bbc8765b9b346b9feb85e60b572d86cb4
       labels:
         app: vcluster
         release: openshift
